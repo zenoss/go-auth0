@@ -50,7 +50,7 @@ func (auth *Auth0) GetToken(body TokenRequestBody) (TokenResponseBody, error) {
 	if err != nil {
 		return resBody, errors.Wrap(err, "Cannot create request")
 	}
-	resp, err := auth.c.Do(req)
+	resp, err := auth.do(req)
 	if err != nil {
 		return resBody, errors.Wrap(err, "Cannot complete token request")
 	}
@@ -70,7 +70,7 @@ func (auth *Auth0) GetToken(body TokenRequestBody) (TokenResponseBody, error) {
 // using client credientials to authenticate
 func (auth *Auth0) GetTokenFromClientCreds(clientID, clientSecret, API string) (TokenResponseBody, error) {
 	body := TokenRequestBody{
-		GrantType:    "client_cred",
+		GrantType:    "client_credentials",
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
 		Audience:     API,

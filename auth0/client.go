@@ -21,3 +21,12 @@ func NewClient(tenant string) *Auth0 {
 		site: fmt.Sprintf("https://%s.auth0.com", tenant),
 	}
 }
+
+func (auth *Auth0) do(req *http.Request) (*http.Response, error) {
+	// POSTs are application/json to this api
+	if req.Method == "POST" {
+		req.Header.Add("Content-Type", "application/json")
+	}
+	resp, err := auth.c.Do(req)
+	return resp, err
+}
