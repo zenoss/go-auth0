@@ -1,13 +1,16 @@
 package auth0
 
 import (
-	"bytes"
 	"encoding/json"
-	"io/ioutil"
-	"net/http"
 
 	"github.com/pkg/errors"
 )
+
+// TokenService provides a service for token related functions
+type TokenService struct {
+	Client
+	API string
+}
 
 // TokenResponseBody contains token related information returned
 // from a token request to Auth0
@@ -40,59 +43,46 @@ type TokenRequestBody struct {
 // GetToken performs a generic call to /oauth/token using the body defined
 // in a TokenRequestBody to get a TokenResponseBody, containing, at minimum,
 // an access token, token type, and expiration
-func (auth *Auth0) GetToken(body TokenRequestBody) (TokenResponseBody, error) {
+func (svc *TokenService) GetToken(body TokenRequestBody) (*TokenResponseBody, error) {
 	var resBody TokenResponseBody
 	reqBody, err := json.Marshal(body)
 	if err != nil {
-		return resBody, errors.Wrap(err, "Cannot marshal TokenRequestBody")
+		return &resBody, errors.Wrap(err, "Cannot marshal TokenRequestBody")
 	}
-	req, err := http.NewRequest("POST", auth.site+"/oauth/token", bytes.NewBuffer(reqBody))
+	err = svc.Post("/oauth/token", reqBody, &resBody)
 	if err != nil {
-		return resBody, errors.Wrap(err, "Cannot create request")
+		return nil, errors.Wrap(err, "Cannot complete token request")
 	}
-	resp, err := auth.do(req)
-	if err != nil {
-		return resBody, errors.Wrap(err, "Cannot complete token request")
-	}
-	defer resp.Body.Close()
-	bodyData, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return resBody, errors.Wrap(err, "Cannot read response body")
-	}
-	err = json.Unmarshal(bodyData, &resBody)
-	if err != nil {
-		return resBody, errors.Wrap(err, "Cannot unmarshal response into TokenResponseBody")
-	}
-	return resBody, nil
+	return &resBody, nil
 }
 
 // GetTokenFromClientCreds gets an access token to the target API
 // using client credientials to authenticate
-func (auth *Auth0) GetTokenFromClientCreds(clientID, clientSecret, API string) (TokenResponseBody, error) {
+func (svc *TokenService) GetTokenFromClientCreds(clientID, clientSecret, API string) (*TokenResponseBody, error) {
 	body := TokenRequestBody{
 		GrantType:    "client_credentials",
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
 		Audience:     API,
 	}
-	return auth.GetToken(body)
+	return svc.GetToken(body)
 }
 
 // GetTokenFromUserPass gets an access token using
 // username and password to authenticate
-func (auth *Auth0) GetTokenFromUserPass(username, password, clientID string) (TokenResponseBody, error) {
+func (svc *TokenService) GetTokenFromUserPass(username, password, clientID string) (*TokenResponseBody, error) {
 	body := TokenRequestBody{
 		GrantType: "password",
 		ClientID:  clientID,
 		Username:  username,
 		Password:  password,
 	}
-	return auth.GetToken(body)
+	return svc.GetToken(body)
 }
 
 // GetRealmTokenFromUserPass gets an access token using
 // username and password to authenticate in a realm
-func (auth *Auth0) GetRealmTokenFromUserPass(username, password, clientID, realm string) (TokenResponseBody, error) {
+func (svc *TokenService) GetRealmTokenFromUserPass(username, password, clientID, realm string) (*TokenResponseBody, error) {
 	body := TokenRequestBody{
 		GrantType: "http://auth0.com/oauth/grant-type/password-realm",
 		ClientID:  clientID,
@@ -100,5 +90,5 @@ func (auth *Auth0) GetRealmTokenFromUserPass(username, password, clientID, realm
 		Password:  password,
 		Realm:     realm,
 	}
-	return auth.GetToken(body)
+	return svc.GetToken(body)
 }
