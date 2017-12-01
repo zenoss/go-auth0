@@ -39,13 +39,13 @@ func New(site string, client Client) *AuthorizationService {
 		c: authz,
 	}
 	authz.Permissions = &PermissionsService{
-		Client: authz,
+		c: authz,
 	}
 	authz.Roles = &RolesService{
-		Client: authz,
+		c: authz,
 	}
 	authz.Users = &UsersService{
-		Client: authz,
+		c: authz,
 	}
 	return authz
 }
