@@ -11,7 +11,7 @@ import (
 	"net/url"
 
 	"github.com/pkg/errors"
-	"github.com/spopezen/go-auth0/auth0/authz"
+	"github.com/zenoss/go-auth0/auth0/authz"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
 )
