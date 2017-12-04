@@ -1,4 +1,6 @@
-package authz_test
+// +build integration
+
+package authz
 
 import (
 	"github.com/stretchr/testify/assert"
@@ -29,7 +31,7 @@ func deleteGroup(suite *AuthzTestSuite, ID string, ignoreErr bool) {
 	}
 }
 
-func cleanUp(suite *AuthzTestSuite) {
+func cleanUpGroups(suite *AuthzTestSuite) {
 	groups := getAllGroups(suite)
 	var ID string
 	for _, g := range *groups {
@@ -38,11 +40,9 @@ func cleanUp(suite *AuthzTestSuite) {
 			break
 		}
 	}
-	deleteGroup(suite, ID, true)
-}
-
-func (suite *AuthzTestSuite) SetupTest() {
-	cleanUp(suite)
+	if ID != "" {
+		deleteGroup(suite, ID, true)
+	}
 }
 
 func (suite *AuthzTestSuite) TestGroupsCreateGetAllDelete() {
