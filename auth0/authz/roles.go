@@ -5,66 +5,38 @@ type RolesService struct {
 	c Client
 }
 
-type role struct {
-	ID              string       `json:"_id,omitempty"`
-	Name            string       `json:"name,omitempty"`
-	Description     string       `json:"description,omitempty"`
-	ApplicationType string       `json:"applicationType,omitempty"`
-	ApplicationID   string       `json:"applicationId,omitempty"`
-	Permissions     []Permission `json:"permissions,omitempty"`
-}
-
-func (stub *role) ToRole() *Role {
-	return &Role{
-		id:              stub.ID,
-		Name:            stub.Name,
-		Description:     stub.Description,
-		ApplicationType: stub.ApplicationType,
-		ApplicationID:   stub.ApplicationID,
-		Permissions:     stub.Permissions,
-	}
-}
-
 // Role is a role
 type Role struct {
-	id              string
-	Name            string       `json:"name,omitempty"`
-	Description     string       `json:"description,omitempty"`
-	ApplicationType string       `json:"applicationType,omitempty"`
-	ApplicationID   string       `json:"applicationId,omitempty"`
-	Permissions     []Permission `json:"permissions,omitempty"`
-}
-
-// ID returns the id of the role
-func (r *Role) ID() string {
-	return r.id
+	ID              string   `json:"_id,omitempty"`
+	Name            string   `json:"name,omitempty"`
+	Description     string   `json:"description,omitempty"`
+	ApplicationType string   `json:"applicationType,omitempty"`
+	ApplicationID   string   `json:"applicationId,omitempty"`
+	PermissionIDs   []string `json:"permissions,omitempty"`
 }
 
 // GetAll returns all roles
 func (svc *RolesService) GetAll() (*[]Role, error) {
-	var rolesResp []role
+	var roles []Role
 	err := svc.c.Get("/api/roles", &struct {
-		Roles *[]role `json:"roles,omitempty"`
-	}{Roles: &rolesResp})
-	roles := make([]Role, len(rolesResp))
-	for n, r := range rolesResp {
-		roles[n] = *r.ToRole()
-	}
+		Roles *[]Role `json:"roles,omitempty"`
+	}{Roles: &roles})
 	return &roles, err
 }
 
 // Get returns a roles
 func (svc *RolesService) Get(ID string) (*Role, error) {
-	var r role
+	var r Role
 	err := svc.c.Get("/api/roles/"+ID, &r)
-	return r.ToRole(), err
+	return &r, err
 }
 
 // Create creates a role
 func (svc *RolesService) Create(r *Role) (*Role, error) {
-	var roleResp role
+	var roleResp Role
+	r.ID = ""
 	err := svc.c.Post("/api/roles", r, &roleResp)
-	return roleResp.ToRole(), err
+	return &roleResp, err
 }
 
 // Delete deletes a roles
@@ -74,7 +46,9 @@ func (svc *RolesService) Delete(ID string) error {
 
 // Update creates a role
 func (svc *RolesService) Update(r *Role) (*Role, error) {
-	var roleResp role
-	err := svc.c.Put("/api/roles/"+r.ID(), r, &roleResp)
-	return roleResp.ToRole(), err
+	var roleResp Role
+	roleID := r.ID
+	r.ID = ""
+	err := svc.c.Put("/api/roles/"+roleID, r, &roleResp)
+	return &roleResp, err
 }
