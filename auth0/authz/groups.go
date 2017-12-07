@@ -32,8 +32,8 @@ type Mapping struct {
 func (svc *GroupsService) GetAll() ([]Group, error) {
 	var groups []Group
 	err := svc.c.Get("/api/groups", &struct {
-		Groups []Group `json:"groups,omitempty"`
-	}{Groups: groups})
+		Groups *[]Group `json:"groups,omitempty"`
+	}{Groups: &groups})
 	return groups, err
 }
 

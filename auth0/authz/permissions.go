@@ -18,8 +18,8 @@ type Permission struct {
 func (svc *PermissionsService) GetAll() ([]Permission, error) {
 	var permissions []Permission
 	err := svc.c.Get("/api/permissions", &struct {
-		Permissions []Permission `json:"permissions,omitempty"`
-	}{Permissions: permissions})
+		Permissions *[]Permission `json:"permissions,omitempty"`
+	}{Permissions: &permissions})
 	return permissions, err
 }
 

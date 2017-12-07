@@ -19,8 +19,8 @@ type Role struct {
 func (svc *RolesService) GetAll() ([]Role, error) {
 	var roles []Role
 	err := svc.c.Get("/api/roles", &struct {
-		Roles []Role `json:"roles,omitempty"`
-	}{Roles: roles})
+		Roles *[]Role `json:"roles,omitempty"`
+	}{Roles: &roles})
 	return roles, err
 }
 
