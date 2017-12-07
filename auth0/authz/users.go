@@ -15,7 +15,7 @@ type User struct {
 }
 
 // GetGroups returns the groups for a user
-func (svc *UsersService) GetGroups(ID string, expand bool) (*[]GroupStub, error) {
+func (svc *UsersService) GetGroups(ID string, expand bool) ([]GroupStub, error) {
 	var groupResp []GroupStub
 	item := "/" + ID + "/groups"
 	if expand {
@@ -25,7 +25,7 @@ func (svc *UsersService) GetGroups(ID string, expand bool) (*[]GroupStub, error)
 	if err != nil {
 		return nil, errors.Wrap(err, "go-auth0: cannot get groups for user")
 	}
-	return &groupResp, err
+	return groupResp, err
 }
 
 // AddGroups puts the user in one or more groups
@@ -38,17 +38,17 @@ func (svc *UsersService) AddGroups(ID string, groups []string) error {
 }
 
 // GetAllGroups returns the groups for a user including nested groups
-func (svc *UsersService) GetAllGroups(ID string) (*[]GroupStub, error) {
+func (svc *UsersService) GetAllGroups(ID string) ([]GroupStub, error) {
 	var groupResp []GroupStub
 	err := svc.c.Get("/api/users/"+ID+"/groups/calculate", &groupResp)
 	if err != nil {
 		return nil, errors.Wrap(err, "go-auth0: cannot get groups for user")
 	}
-	return &groupResp, err
+	return groupResp, err
 }
 
 // GetRoles returns the roles for a user
-func (svc *UsersService) GetRoles(ID string) (*[]Role, error) {
+func (svc *UsersService) GetRoles(ID string) ([]Role, error) {
 	var roleResp []Role
 	err := svc.c.Get("/api/users/"+ID+"/roles", &roleResp)
 	if err != nil {
@@ -58,7 +58,7 @@ func (svc *UsersService) GetRoles(ID string) (*[]Role, error) {
 	for n, r := range roleResp {
 		roles[n] = r
 	}
-	return &roles, err
+	return roles, err
 }
 
 // AddRoles gives the user one or more roles
@@ -80,7 +80,7 @@ func (svc *UsersService) RemoveRoles(ID string, roles []string) error {
 }
 
 // GetAllRoles returns all roles for a user, including through group membership
-func (svc *UsersService) GetAllRoles(ID string) (*[]Role, error) {
+func (svc *UsersService) GetAllRoles(ID string) ([]Role, error) {
 	var roleResp []Role
 	err := svc.c.Get("/api/users/"+ID+"/roles/calculate", &roleResp)
 	if err != nil {
@@ -90,7 +90,7 @@ func (svc *UsersService) GetAllRoles(ID string) (*[]Role, error) {
 	for n, r := range roleResp {
 		roles[n] = r
 	}
-	return &roles, err
+	return roles, err
 }
 
 // ExecAuthPolicy executes the authorization policy for a user in the context of a client
