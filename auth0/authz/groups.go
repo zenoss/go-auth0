@@ -153,10 +153,9 @@ func (svc *GroupsService) GetGroupRoles(groupID string) ([]string, error) {
 }
 
 // AddGroupRoles adds one or more roles to a group
-func (svc *GroupsService) AddGroupRoles(groupID string, roles []string) ([]string, error) {
-	var rolesResp []string
-	err := svc.c.Patch("/api/groups/"+groupID+"/roles", roles, &rolesResp)
-	return rolesResp, err
+func (svc *GroupsService) AddGroupRoles(groupID string, roles []string) error {
+	err := svc.c.Patch("/api/groups/"+groupID+"/roles", roles, nil)
+	return err
 }
 
 // DeleteGroupRoles deletes one or more roles from a group
