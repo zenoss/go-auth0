@@ -19,6 +19,7 @@ type Group struct {
 	GroupStub
 	Members  []string  `json:"members,omitempty"`
 	Mappings []Mapping `json:"mappings,omitempty"`
+	Roles    []string  `json:"roles,omitempty"`
 }
 
 // Mapping is a connection->group mapping for a group
