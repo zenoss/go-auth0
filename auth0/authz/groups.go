@@ -81,13 +81,12 @@ func (svc *GroupsService) GetMappings(groupID string) ([]Mapping, error) {
 }
 
 // CreateMappings creates one or more mappings for a group
-func (svc *GroupsService) CreateMappings(groupID string, mappings []Mapping) ([]Mapping, error) {
-	var mappingsResp []Mapping
+func (svc *GroupsService) CreateMappings(groupID string, mappings []Mapping) error {
 	for _, mapping := range mappings {
 		mapping.ID = ""
 	}
-	err := svc.c.Patch("/api/groups/"+groupID+"/mappings", mappings, &mappingsResp)
-	return mappingsResp, err
+	err := svc.c.Patch("/api/groups/"+groupID+"/mappings", mappings, nil)
+	return err
 }
 
 // DeleteMappings creates one or more mappings for a group
