@@ -1,4 +1,6 @@
-package authz_test
+// +build integration
+
+package authz
 
 import (
 	"os"
@@ -24,6 +26,12 @@ func (s *AuthzTestSuite) SetupSuite() {
 	client, err := cfg.ClientFromCredentials(os.Getenv("AUTH0_AUTHORIZATION_API"))
 	assert.Nil(s.T(), err)
 	s.Client = client
+}
+
+func (suite *AuthzTestSuite) SetupTest() {
+	cleanUpGroups(suite)
+	cleanUpPerms(suite)
+	cleanUpRoles(suite)
 }
 
 func TestAuthzTestSuite(t *testing.T) {
