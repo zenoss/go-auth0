@@ -3,6 +3,8 @@
 package authz_test
 
 import (
+	"os"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/zenoss/go-auth0/auth0/authz"
 )
@@ -11,7 +13,7 @@ const (
 	permName    = "go-auth0-test-permission"
 	permDesc    = "A test permission for go-auth0"
 	permAppType = "client"
-	permAppID   = "SE1XfEMpK7sDUsR1fb30g07Yw6uuxcW5"
+	permAppID   = os.Getenv("AUTH0_CLIENT_ID")
 )
 
 func createPerm(suite *AuthzTestSuite) authz.Permission {

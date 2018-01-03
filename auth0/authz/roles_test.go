@@ -3,6 +3,8 @@
 package authz_test
 
 import (
+	"os"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/zenoss/go-auth0/auth0/authz"
 )
@@ -11,7 +13,7 @@ const (
 	roleName    = "go-auth0-test-role"
 	roleDesc    = "A test role for go-auth0"
 	roleAppType = "client"
-	roleAppID   = "SE1XfEMpK7sDUsR1fb30g07Yw6uuxcW5"
+	roleAppID   = os.Getenv("AUTH0_CLIENT_ID")
 )
 
 var rolePerms = []authz.Permission{}
