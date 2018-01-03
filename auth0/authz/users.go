@@ -7,15 +7,9 @@ type UsersService struct {
 	c Client
 }
 
-type user struct {
-	ID     string  `json:"_id,omitempty"`
-	Roles  []Role  `json:"roles,omitempty"`
-	Groups []Group `json:"groups,omitempty"`
-}
-
 // User is a user
 type User struct {
-	id     string
+	ID     string  `json:"_id,omitempty"`
 	Roles  []Role  `json:"roles,omitempty"`
 	Groups []Group `json:"groups,omitempty"`
 }
@@ -55,14 +49,14 @@ func (svc *UsersService) GetAllGroups(ID string) (*[]GroupStub, error) {
 
 // GetRoles returns the roles for a user
 func (svc *UsersService) GetRoles(ID string) (*[]Role, error) {
-	var roleResp []role
+	var roleResp []Role
 	err := svc.c.Get("/api/users/"+ID+"/roles", &roleResp)
 	if err != nil {
 		return nil, errors.Wrap(err, "go-auth0: cannot get roles for user")
 	}
 	roles := make([]Role, len(roleResp))
 	for n, r := range roleResp {
-		roles[n] = *r.ToRole()
+		roles[n] = r
 	}
 	return &roles, err
 }
@@ -87,14 +81,14 @@ func (svc *UsersService) RemoveRoles(ID string, roles []string) error {
 
 // GetAllRoles returns all roles for a user, including through group membership
 func (svc *UsersService) GetAllRoles(ID string) (*[]Role, error) {
-	var roleResp []role
+	var roleResp []Role
 	err := svc.c.Get("/api/users/"+ID+"/roles/calculate", &roleResp)
 	if err != nil {
 		return nil, errors.Wrap(err, "go-auth0: cannot get all roles for user")
 	}
 	roles := make([]Role, len(roleResp))
 	for n, r := range roleResp {
-		roles[n] = *r.ToRole()
+		roles[n] = r
 	}
 	return &roles, err
 }

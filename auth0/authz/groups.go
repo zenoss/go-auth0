@@ -65,7 +65,9 @@ func (svc *GroupsService) Delete(ID string) error {
 // Update updates a group
 func (svc *GroupsService) Update(stub *GroupStub) (*GroupStub, error) {
 	var group GroupStub
-	err := svc.c.Put("/api/groups/"+stub.ID, stub, &group)
+	stubID := stub.ID
+	stub.ID = ""
+	err := svc.c.Put("/api/groups/"+stubID, stub, &group)
 	return &group, err
 }
 

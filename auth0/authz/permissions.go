@@ -5,7 +5,8 @@ type PermissionsService struct {
 	c Client
 }
 
-type permission struct {
+// Permission is a permission
+type Permission struct {
 	ID              string `json:"_id,omitempty"`
 	Name            string `json:"name,omitempty"`
 	Description     string `json:"description,omitempty"`
@@ -13,55 +14,28 @@ type permission struct {
 	ApplicationID   string `json:"applicationId,omitempty"`
 }
 
-func (stub *permission) ToPermission() *Permission {
-	return &Permission{
-		id:              stub.ID,
-		Name:            stub.Name,
-		Description:     stub.Description,
-		ApplicationType: stub.ApplicationType,
-		ApplicationID:   stub.ApplicationID,
-	}
-}
-
-// Permission is a permission
-type Permission struct {
-	id              string
-	Name            string `json:"name,omitempty"`
-	Description     string `json:"description,omitempty"`
-	ApplicationType string `json:"applicationType,omitempty"`
-	ApplicationID   string `json:"applicationId,omitempty"`
-}
-
-// ID returns the id of the permission
-func (perm *Permission) ID() string {
-	return perm.id
-}
-
 // GetAll returns all permissions
 func (svc *PermissionsService) GetAll() (*[]Permission, error) {
-	var permissions []permission
+	var permissions []Permission
 	err := svc.c.Get("/api/permissions", &struct {
-		Permissions *[]permission `json:"permissions,omitempty"`
+		Permissions *[]Permission `json:"permissions,omitempty"`
 	}{Permissions: &permissions})
-	perms := make([]Permission, len(permissions))
-	for n, perm := range permissions {
-		perms[n] = *perm.ToPermission()
-	}
-	return &perms, err
+	return &permissions, err
 }
 
 // Get returns a permissions
 func (svc *PermissionsService) Get(ID string) (*Permission, error) {
-	var perm permission
+	var perm Permission
 	err := svc.c.Get("/api/permissions/"+ID, &perm)
-	return perm.ToPermission(), err
+	return &perm, err
 }
 
 // Create creates a permission
 func (svc *PermissionsService) Create(perm *Permission) (*Permission, error) {
-	var permResp permission
+	var permResp Permission
+	perm.ID = ""
 	err := svc.c.Post("/api/permissions", perm, &permResp)
-	return permResp.ToPermission(), err
+	return &permResp, err
 }
 
 // Delete deletes a permissions
@@ -71,7 +45,9 @@ func (svc *PermissionsService) Delete(ID string) error {
 
 // Update creates a permission
 func (svc *PermissionsService) Update(perm *Permission) (*Permission, error) {
-	var permResp permission
-	err := svc.c.Put("/api/permissions/"+perm.ID(), perm, &permResp)
-	return permResp.ToPermission(), err
+	var permResp Permission
+	permID := perm.ID
+	perm.ID = ""
+	err := svc.c.Put("/api/permissions/"+permID, perm, &permResp)
+	return &permResp, err
 }
