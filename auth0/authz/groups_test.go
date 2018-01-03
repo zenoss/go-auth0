@@ -58,6 +58,17 @@ func (suite *AuthzTestSuite) TestGroupsCreateGetAllDelete() {
 	assert.Nil(t, err)
 	assert.Equal(t, groupName, group.Name)
 
+	// And that getall shows it
+	groups := getAllGroups(suite)
+	found := false
+	for _, g := range groups {
+		if stub.ID == g.ID {
+			found = true
+		}
+	}
+	assert.True(t, found)
+
+	// Update it
 	group.Description = "go-auth0 test group"
 	stub, err = svc.Update(group.GroupStub)
 	assert.Nil(t, err)
@@ -65,8 +76,8 @@ func (suite *AuthzTestSuite) TestGroupsCreateGetAllDelete() {
 	// Delete it
 	deleteGroup(suite, stub.ID, false)
 	// Check it was deleted
-	groups := getAllGroups(suite)
-	found := false
+	groups = getAllGroups(suite)
+	found = false
 	for _, g := range groups {
 		if stub.ID == g.ID {
 			found = true
