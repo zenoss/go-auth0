@@ -13,7 +13,10 @@ const (
 	roleName    = "go-auth0-test-role"
 	roleDesc    = "A test role for go-auth0"
 	roleAppType = "client"
-	roleAppID   = os.Getenv("AUTH0_CLIENT_ID")
+)
+
+var (
+	roleAppID = os.Getenv("AUTH0_CLIENT_ID")
 )
 
 var rolePerms = []authz.Permission{}

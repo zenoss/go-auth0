@@ -13,7 +13,10 @@ const (
 	permName    = "go-auth0-test-permission"
 	permDesc    = "A test permission for go-auth0"
 	permAppType = "client"
-	permAppID   = os.Getenv("AUTH0_CLIENT_ID")
+)
+
+var (
+	permAppID = os.Getenv("AUTH0_CLIENT_ID")
 )
 
 func createPerm(suite *AuthzTestSuite) authz.Permission {
