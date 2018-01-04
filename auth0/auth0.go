@@ -12,6 +12,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/zenoss/go-auth0/auth0/authz"
+	"github.com/zenoss/go-auth0/auth0/mgmt"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
 )
@@ -42,6 +43,7 @@ type Auth0 struct {
 	Site  string
 	Token *TokenService
 	Authz *authz.AuthorizationService
+	Mgmt  *mgmt.ManagementService
 }
 
 // Error is an an http error returned from the Auth0 service
@@ -107,6 +109,7 @@ func (conf *Config) ClientFromGrant(getGrant GrantFunc) (*Auth0, error) {
 	c.Token = &TokenService{
 		Client: c,
 	}
+	c.Mgmt = mgmt.New(c.Site, c)
 	if conf.AuthorizationURL != "" {
 		c.Authz = authz.New(conf.AuthorizationURL, c)
 	}
@@ -133,6 +136,7 @@ func (conf *Config) ClientFromCredentials(API string) (*Auth0, error) {
 	c.Token = &TokenService{
 		Client: c,
 	}
+	c.Mgmt = mgmt.New(c.Site, c)
 	if conf.AuthorizationURL != "" {
 		c.Authz = authz.New(conf.AuthorizationURL, c)
 	}
@@ -155,7 +159,8 @@ func readAndUnmarshal(r io.Reader, obj interface{}) error {
 // Do processes a request and unmarshals the response body into respBody
 func (auth *Auth0) Do(req *http.Request, respBody interface{}) error {
 	// POSTs are application/json to this api
-	if req.ContentLength > 0 && (req.Method == "POST" || req.Method == "PUT") {
+	if req.ContentLength > 0 && (req.Method == "POST" ||
+		req.Method == "PUT" || req.Method == "PATCH") {
 		req.Header.Add("Content-Type", "application/json")
 	}
 	fmt.Printf("Request: %s %+v\n", req.Method, req.URL)

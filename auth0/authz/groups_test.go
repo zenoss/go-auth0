@@ -1,3 +1,5 @@
+// +build integration
+
 package authz_test
 
 import (
@@ -10,13 +12,13 @@ const (
 	groupDesc = "A test group for go-auth0"
 )
 
-func createGroup(suite *AuthzTestSuite) *authz.GroupStub {
+func createGroup(suite *AuthzTestSuite) authz.GroupStub {
 	stub, err := suite.Client.Authz.Groups.Create(groupName, groupDesc)
 	assert.Nil(suite.T(), err)
 	return stub
 }
 
-func getAllGroups(suite *AuthzTestSuite) *[]authz.Group {
+func getAllGroups(suite *AuthzTestSuite) []authz.Group {
 	groups, err := suite.Client.Authz.Groups.GetAll()
 	assert.Nil(suite.T(), err)
 	return groups
@@ -32,7 +34,7 @@ func deleteGroup(suite *AuthzTestSuite, ID string, ignoreErr bool) {
 func cleanUp(suite *AuthzTestSuite) {
 	groups := getAllGroups(suite)
 	var ID string
-	for _, g := range *groups {
+	for _, g := range groups {
 		if g.Name == groupName {
 			ID = g.ID
 			break
@@ -56,16 +58,27 @@ func (suite *AuthzTestSuite) TestGroupsCreateGetAllDelete() {
 	assert.Nil(t, err)
 	assert.Equal(t, groupName, group.Name)
 
+	// And that getall shows it
+	groups := getAllGroups(suite)
+	found := false
+	for _, g := range groups {
+		if stub.ID == g.ID {
+			found = true
+		}
+	}
+	assert.True(t, found)
+
+	// Update it
 	group.Description = "go-auth0 test group"
-	stub, err = svc.Update(&group.GroupStub)
+	stub, err = svc.Update(group.GroupStub)
 	assert.Nil(t, err)
 
 	// Delete it
 	deleteGroup(suite, stub.ID, false)
 	// Check it was deleted
-	groups := getAllGroups(suite)
-	found := false
-	for _, g := range *groups {
+	groups = getAllGroups(suite)
+	found = false
+	for _, g := range groups {
 		if stub.ID == g.ID {
 			found = true
 		}

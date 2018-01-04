@@ -1,6 +1,6 @@
 // +build integration
 
-package authz_test
+package mgmt_test
 
 import (
 	"os"
@@ -11,23 +11,27 @@ import (
 	"github.com/zenoss/go-auth0/auth0"
 )
 
-type AuthzTestSuite struct {
+type ManagementTestSuite struct {
 	suite.Suite
 	Client *auth0.Auth0
 }
 
-func (s *AuthzTestSuite) SetupSuite() {
+func (s *ManagementTestSuite) SetupSuite() {
 	cfg := auth0.Config{
 		ClientID:         os.Getenv("AUTH0_CLIENT_ID"),
 		ClientSecret:     os.Getenv("AUTH0_CLIENT_SECRET"),
 		Tenant:           os.Getenv("AUTH0_TENANT"),
 		AuthorizationURL: os.Getenv("AUTH0_AUTHORIZATION_URL"),
 	}
-	client, err := cfg.ClientFromCredentials(os.Getenv("AUTH0_AUTHORIZATION_API"))
+	client, err := cfg.ClientFromCredentials(os.Getenv("AUTH0_MANAGEMENT_API"))
 	assert.Nil(s.T(), err)
 	s.Client = client
 }
 
-func TestAuthzTestSuite(t *testing.T) {
-	suite.Run(t, new(AuthzTestSuite))
+func (suite *ManagementTestSuite) SetupTest() {
+	cleanUpUsers(suite)
+}
+
+func TestManagementTestSuite(t *testing.T) {
+	suite.Run(t, new(ManagementTestSuite))
 }
