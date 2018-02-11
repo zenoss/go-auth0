@@ -1,6 +1,9 @@
 package authz
 
-import "github.com/pkg/errors"
+import (
+	"github.com/pkg/errors"
+	"github.com/zenoss/go-auth0/auth0/mgmt"
+)
 
 // GroupsService provides a service for group related functions
 type GroupsService struct {
@@ -27,6 +30,12 @@ type Mapping struct {
 	ID             string `json:"_id,omitempty"`
 	GroupName      string `json:"groupName,omitempty"`
 	ConnectionName string `json:"connectionName,omitempty"`
+}
+
+// Members is a result of members from the authorization extension
+type Members struct {
+	Total int         `json:"total,omitempty"`
+	Users []mgmt.User `json:"users,omitempty"`
 }
 
 // GetAll returns all groups
@@ -97,8 +106,8 @@ func (svc *GroupsService) DeleteMappings(groupID string, mappings []Mapping) ([]
 }
 
 // GetMembers gets the members of a group
-func (svc *GroupsService) GetMembers(groupID string) ([]string, error) {
-	var members []string
+func (svc *GroupsService) GetMembers(groupID string) (Members, error) {
+	var members Members
 	err := svc.c.Get("/api/groups/"+groupID+"/members", &members)
 	return members, err
 }
