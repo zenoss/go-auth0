@@ -7,7 +7,6 @@ import (
 // AuthorizationService is a gateway to Auth0 Authorization Extension services
 type AuthorizationService struct {
 	*http.Client
-	Site        string
 	Groups      *GroupsService
 	Permissions *PermissionsService
 	Roles       *RolesService
@@ -18,8 +17,10 @@ type AuthorizationService struct {
 // Authorization extension lives at site
 func New(site string, client *http.Client) *AuthorizationService {
 	authz := &AuthorizationService{
-		Client: client,
-		Site:   site,
+		Client: &http.Client{
+			Doer: client,
+			Site: site,
+		},
 	}
 	authz.Groups = &GroupsService{
 		c: authz.Client,
