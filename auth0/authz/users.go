@@ -1,10 +1,13 @@
 package authz
 
-import "github.com/pkg/errors"
+import (
+	"github.com/pkg/errors"
+	"github.com/zenoss/go-auth0/auth0/http"
+)
 
 // UsersService provides a service for user related functions
 type UsersService struct {
-	c Client
+	c *http.Client
 }
 
 // User is a user
