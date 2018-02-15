@@ -3,7 +3,6 @@ package http
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -32,7 +31,6 @@ func readAndUnmarshal(r io.Reader, obj interface{}) error {
 	if err != nil {
 		return errors.Wrap(err, "Cannot read response body")
 	}
-	fmt.Printf("Response Body:\n%s\n\n", data)
 	err = json.Unmarshal(data, obj)
 	if err != nil {
 		return errors.Wrap(err, "Cannot unmarshal response")
