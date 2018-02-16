@@ -1,10 +1,13 @@
 package authz
 
-import "github.com/pkg/errors"
+import (
+	"github.com/pkg/errors"
+	"github.com/zenoss/go-auth0/auth0/http"
+)
 
 // GroupsService provides a service for group related functions
 type GroupsService struct {
-	c Client
+	c *http.Client
 }
 
 // GroupStub is a stub of a group

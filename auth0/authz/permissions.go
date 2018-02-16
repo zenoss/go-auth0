@@ -1,8 +1,12 @@
 package authz
 
+import (
+	"github.com/zenoss/go-auth0/auth0/http"
+)
+
 // PermissionsService provides a service for permission related functions
 type PermissionsService struct {
-	c Client
+	c *http.Client
 }
 
 // Permission is a permission

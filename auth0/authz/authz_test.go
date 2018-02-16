@@ -23,7 +23,7 @@ func (s *AuthzTestSuite) SetupSuite() {
 		Tenant:           os.Getenv("AUTH0_TENANT"),
 		AuthorizationURL: os.Getenv("AUTH0_AUTHORIZATION_URL"),
 	}
-	client, err := cfg.ClientFromCredentials(os.Getenv("AUTH0_AUTHORIZATION_API"))
+	client, err := cfg.ClientFromCredentials([]string{os.Getenv("AUTH0_AUTHORIZATION_API")})
 	assert.Nil(s.T(), err)
 	s.Client = client
 }

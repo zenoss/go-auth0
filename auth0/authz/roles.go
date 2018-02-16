@@ -1,8 +1,12 @@
 package authz
 
+import (
+	"github.com/zenoss/go-auth0/auth0/http"
+)
+
 // RolesService provides a service for role related functions
 type RolesService struct {
-	c Client
+	c *http.Client
 }
 
 // Role is a role

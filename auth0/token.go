@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 
 	"github.com/pkg/errors"
+	"github.com/zenoss/go-auth0/auth0/http"
 )
 
 // TokenService provides a service for token related functions
 type TokenService struct {
-	Client
+	*http.Client
 	API string
 }
 
