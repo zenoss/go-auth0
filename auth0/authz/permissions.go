@@ -21,7 +21,7 @@ type Permission struct {
 // GetAll returns all permissions
 func (svc *PermissionsService) GetAll() ([]Permission, error) {
 	var permissions []Permission
-	err := svc.c.Get("/api/permissions", &struct {
+	err := svc.c.Get("/permissions", &struct {
 		Permissions *[]Permission `json:"permissions,omitempty"`
 	}{Permissions: &permissions})
 	return permissions, err
@@ -30,7 +30,7 @@ func (svc *PermissionsService) GetAll() ([]Permission, error) {
 // Get returns a permissions
 func (svc *PermissionsService) Get(ID string) (Permission, error) {
 	var perm Permission
-	err := svc.c.Get("/api/permissions/"+ID, &perm)
+	err := svc.c.Get("/permissions/"+ID, &perm)
 	return perm, err
 }
 
@@ -38,13 +38,13 @@ func (svc *PermissionsService) Get(ID string) (Permission, error) {
 func (svc *PermissionsService) Create(perm Permission) (Permission, error) {
 	var permResp Permission
 	perm.ID = ""
-	err := svc.c.Post("/api/permissions", &perm, &permResp)
+	err := svc.c.Post("/permissions", &perm, &permResp)
 	return permResp, err
 }
 
 // Delete deletes a permissions
 func (svc *PermissionsService) Delete(ID string) error {
-	return svc.c.Delete("/api/permissions/"+ID, nil, nil)
+	return svc.c.Delete("/permissions/"+ID, nil, nil)
 }
 
 // Update creates a permission
@@ -52,6 +52,6 @@ func (svc *PermissionsService) Update(perm Permission) (Permission, error) {
 	var permResp Permission
 	permID := perm.ID
 	perm.ID = ""
-	err := svc.c.Put("/api/permissions/"+permID, &perm, &permResp)
+	err := svc.c.Put("/permissions/"+permID, &perm, &permResp)
 	return permResp, err
 }

@@ -22,7 +22,7 @@ type Role struct {
 // GetAll returns all roles
 func (svc *RolesService) GetAll() ([]Role, error) {
 	var roles []Role
-	err := svc.c.Get("/api/roles", &struct {
+	err := svc.c.Get("/roles", &struct {
 		Roles *[]Role `json:"roles,omitempty"`
 	}{Roles: &roles})
 	return roles, err
@@ -31,7 +31,7 @@ func (svc *RolesService) GetAll() ([]Role, error) {
 // Get returns a roles
 func (svc *RolesService) Get(ID string) (Role, error) {
 	var r Role
-	err := svc.c.Get("/api/roles/"+ID, &r)
+	err := svc.c.Get("/roles/"+ID, &r)
 	return r, err
 }
 
@@ -39,13 +39,13 @@ func (svc *RolesService) Get(ID string) (Role, error) {
 func (svc *RolesService) Create(r Role) (Role, error) {
 	var roleResp Role
 	r.ID = ""
-	err := svc.c.Post("/api/roles", &r, &roleResp)
+	err := svc.c.Post("/roles", &r, &roleResp)
 	return roleResp, err
 }
 
 // Delete deletes a roles
 func (svc *RolesService) Delete(ID string) error {
-	return svc.c.Delete("/api/roles/"+ID, nil, nil)
+	return svc.c.Delete("/roles/"+ID, nil, nil)
 }
 
 // Update creates a role
@@ -53,6 +53,6 @@ func (svc *RolesService) Update(r Role) (Role, error) {
 	var roleResp Role
 	roleID := r.ID
 	r.ID = ""
-	err := svc.c.Put("/api/roles/"+roleID, &r, &roleResp)
+	err := svc.c.Put("/roles/"+roleID, &r, &roleResp)
 	return roleResp, err
 }

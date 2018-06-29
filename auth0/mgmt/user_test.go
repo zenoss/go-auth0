@@ -9,7 +9,7 @@ import (
 
 const (
 	userEmail = "someone@example.com"
-	userPass  = "wildwest"
+	userPass  = "WildWest000"
 )
 
 func createUser(suite *ManagementTestSuite) mgmt.User {

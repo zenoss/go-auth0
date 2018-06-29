@@ -11,12 +11,9 @@ type ManagementService struct {
 }
 
 // New creates a new ManagementService, backed by client
-func New(site string, client *http.Client) *ManagementService {
+func New(client *http.Client) *ManagementService {
 	mgmt := &ManagementService{
-		Client: &http.Client{
-			Doer: client,
-			Site: site,
-		},
+		Client: client,
 	}
 	mgmt.Users = &UsersService{
 		c: mgmt.Client,

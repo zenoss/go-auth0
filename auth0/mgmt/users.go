@@ -78,32 +78,32 @@ type Identity struct {
 // GetAll returns all users
 func (svc *UsersService) GetAll() ([]User, error) {
 	var users []User
-	err := svc.c.Get("/api/v2/users", &users)
+	err := svc.c.Get("/users", &users)
 	return users, err
 }
 
 // Get returns a users
 func (svc *UsersService) Get(userID string) (User, error) {
 	var user User
-	err := svc.c.Get("/api/v2/users/"+userID, &user)
+	err := svc.c.Get("/users/"+userID, &user)
 	return user, err
 }
 
 // Create creates a user
 func (svc *UsersService) Create(opts UserOpts) (User, error) {
 	var user User
-	err := svc.c.Post("/api/v2/users", opts, &user)
+	err := svc.c.Post("/users", opts, &user)
 	return user, err
 }
 
 // Delete deletes a users
 func (svc *UsersService) Delete(userID string) error {
-	return svc.c.Delete("/api/v2/users/"+userID, nil, nil)
+	return svc.c.Delete("/users/"+userID, nil, nil)
 }
 
 // Update updates a user
 func (svc *UsersService) Update(userID string, opts UserUpdateOpts) (User, error) {
 	var user User
-	err := svc.c.Patch("/api/v2/users/"+userID, &opts, &user)
+	err := svc.c.Patch("/users/"+userID, &opts, &user)
 	return user, err
 }
