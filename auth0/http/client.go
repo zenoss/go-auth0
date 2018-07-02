@@ -3,7 +3,6 @@ package http
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -58,7 +57,6 @@ func getResponseError(resp *http.Response) error {
 
 // Do processes a request and unmarshals the response body into respBody
 func (c *RootClient) Do(req *http.Request, respBody interface{}) error {
-	fmt.Printf("REQ:\n%+v\n", *req)
 	// POSTs are application/json to this api
 	if req.ContentLength > 0 && (req.Method == "POST" ||
 		req.Method == "PUT" || req.Method == "PATCH") {
