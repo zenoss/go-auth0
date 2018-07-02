@@ -86,3 +86,16 @@ func (suite *Auth0TestSuite) TestAuthzClientFromCredentials() {
 	assert.Nil(t, err)
 	t.Logf("groups:\n%v\n", groups)
 }
+
+func (suite *Auth0TestSuite) TestTokenClient() {
+	t := suite.T()
+	// Create a go http client ready to make calls to the token endpoint
+	c := auth0.TokenClient(suite.Domain)
+	token, err := c.GetTokenFromClientCreds(
+		getFromEnv("AUTH0_MANAGEMENT_CLIENT_ID"),
+		getFromEnv("AUTH0_MANAGEMENT_CLIENT_SECRET"),
+		getFromEnv("AUTH0_MANAGEMENT_API_AUDIENCE"),
+	)
+	assert.Nil(t, err)
+	t.Logf("token:\n%v\n", token)
+}

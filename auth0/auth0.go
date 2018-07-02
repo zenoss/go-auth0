@@ -14,6 +14,18 @@ import (
 	"golang.org/x/oauth2/clientcredentials"
 )
 
+// TokenClient is a client to the token endpoint
+func TokenClient(domain string) *TokenService {
+	return &TokenService{
+		&http.Client{
+			Doer: &http.RootClient{
+				Client: &gohttp.Client{},
+			},
+			API: fmt.Sprintf("https://%s", domain),
+		},
+	}
+}
+
 // API represents an api in Auth0
 type API struct {
 	URL          string

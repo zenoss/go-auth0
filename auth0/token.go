@@ -52,12 +52,12 @@ func (svc *TokenService) GetToken(body TokenRequestBody) (*TokenResponseBody, er
 
 // GetTokenFromClientCreds gets an access token to the target API
 // using client credientials to authenticate
-func (svc *TokenService) GetTokenFromClientCreds(clientID, clientSecret, API string) (*TokenResponseBody, error) {
+func (svc *TokenService) GetTokenFromClientCreds(clientID, clientSecret, audience string) (*TokenResponseBody, error) {
 	body := TokenRequestBody{
 		GrantType:    "client_credentials",
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
-		Audience:     API,
+		Audience:     audience,
 	}
 	return svc.GetToken(body)
 }
