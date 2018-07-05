@@ -1,5 +1,17 @@
 // +build integration
 
+// These integration tests run against an actual instance of Auth0,
+//  but should not be run against a production tenant.
+
+// The tests in this package will require that the authorization extension is installed,
+//  and that the following environment variables are defined
+//  - AUTH0_AUTHORIZATION_API_URL
+//  - AUTH0_AUTHORIZATION_API_AUDIENCE
+//  - AUTH0_AUTHORIZATION_CLIENT_ID
+//  - AUTH0_AUTHORIZATION_CLIENT_SECRET
+// API URL and API Audience are found by opening auth0 authorization, click your profile -> API
+// The Client can be any enabled for the authorization api
+
 package authz_test
 
 import (
