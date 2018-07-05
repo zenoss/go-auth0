@@ -6,26 +6,33 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"github.com/zenoss/go-auth0/auth0"
+	"github.com/zenoss/go-auth0/auth0/authz"
 )
 
 type AuthzTestSuite struct {
 	suite.Suite
-	Client *auth0.Auth0
+	authorization *authz.AuthorizationService
+}
+
+func getFromEnv(envVar string) string {
+	val := os.Getenv(envVar)
+	if val == "" {
+		panic("environment variable '" + envVar + "' must be set")
+	}
+	return val
 }
 
 func (s *AuthzTestSuite) SetupSuite() {
-	cfg := auth0.Config{
-		ClientID:         os.Getenv("AUTH0_CLIENT_ID"),
-		ClientSecret:     os.Getenv("AUTH0_CLIENT_SECRET"),
-		Tenant:           os.Getenv("AUTH0_TENANT"),
-		AuthorizationURL: os.Getenv("AUTH0_AUTHORIZATION_URL"),
+	api := auth0.API{
+		URL:          getFromEnv("AUTH0_AUTHORIZATION_API_URL"),
+		Audience:     []string{getFromEnv("AUTH0_AUTHORIZATION_API_AUDIENCE")},
+		ClientID:     getFromEnv("AUTH0_AUTHORIZATION_CLIENT_ID"),
+		ClientSecret: getFromEnv("AUTH0_AUTHORIZATION_CLIENT_SECRET"),
 	}
-	client, err := cfg.ClientFromCredentials([]string{os.Getenv("AUTH0_AUTHORIZATION_API")})
-	assert.Nil(s.T(), err)
-	s.Client = client
+	domain := getFromEnv("AUTH0_DOMAIN")
+	s.authorization = auth0.AuthzClientFromCredentials(domain, api)
 }
 
 func TestAuthzTestSuite(t *testing.T) {

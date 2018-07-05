@@ -3,8 +3,6 @@
 package authz_test
 
 import (
-	"os"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/zenoss/go-auth0/auth0/authz"
 )
@@ -16,13 +14,13 @@ const (
 )
 
 var (
-	roleAppID = os.Getenv("AUTH0_CLIENT_ID")
+	roleAppID = getFromEnv("AUTH0_AUTHORIZATION_CLIENT_ID")
 )
 
 var rolePerms = []authz.Permission{}
 
 func createRole(suite *AuthzTestSuite) authz.Role {
-	role, err := suite.Client.Authz.Roles.Create(authz.Role{
+	role, err := suite.authorization.Roles.Create(authz.Role{
 		Name:            roleName,
 		Description:     roleDesc,
 		ApplicationType: roleAppType,
@@ -33,19 +31,19 @@ func createRole(suite *AuthzTestSuite) authz.Role {
 }
 
 func getAllRoles(suite *AuthzTestSuite) []authz.Role {
-	roles, err := suite.Client.Authz.Roles.GetAll()
+	roles, err := suite.authorization.Roles.GetAll()
 	assert.Nil(suite.T(), err)
 	return roles
 }
 
 func updateRole(suite *AuthzTestSuite, role authz.Role) authz.Role {
-	role, err := suite.Client.Authz.Roles.Update(role)
+	role, err := suite.authorization.Roles.Update(role)
 	assert.Nil(suite.T(), err)
 	return role
 }
 
 func deleteRole(suite *AuthzTestSuite, ID string, ignoreErr bool) {
-	err := suite.Client.Authz.Roles.Delete(ID)
+	err := suite.authorization.Roles.Delete(ID)
 	if !ignoreErr {
 		assert.Nil(suite.T(), err)
 	}
@@ -67,7 +65,7 @@ func cleanUpRoles(suite *AuthzTestSuite) {
 
 func (suite *AuthzTestSuite) TestRolesCreateGetAllDelete() {
 	t := suite.T()
-	svc := suite.Client.Authz.Roles
+	svc := suite.authorization.Roles
 	// Create a role
 	role := createRole(suite)
 	assert.Equal(suite.T(), roleName, role.Name)

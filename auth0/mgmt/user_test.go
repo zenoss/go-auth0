@@ -13,7 +13,7 @@ const (
 )
 
 func createUser(suite *ManagementTestSuite) mgmt.User {
-	user, err := suite.Client.Mgmt.Users.Create(mgmt.UserOpts{
+	user, err := suite.management.Users.Create(mgmt.UserOpts{
 		Connection: "Username-Password-Authentication",
 		Email:      userEmail,
 		Password:   userPass,
@@ -23,13 +23,13 @@ func createUser(suite *ManagementTestSuite) mgmt.User {
 }
 
 func getAllUsers(suite *ManagementTestSuite) []mgmt.User {
-	users, err := suite.Client.Mgmt.Users.GetAll()
+	users, err := suite.management.Users.GetAll()
 	assert.Nil(suite.T(), err)
 	return users
 }
 
 func deleteUser(suite *ManagementTestSuite, ID string, ignoreErr bool) {
-	err := suite.Client.Mgmt.Users.Delete(ID)
+	err := suite.management.Users.Delete(ID)
 	if !ignoreErr {
 		assert.Nil(suite.T(), err)
 	}
@@ -51,7 +51,7 @@ func cleanUpUsers(suite *ManagementTestSuite) {
 
 func (suite *ManagementTestSuite) TestUsersCreateGetAllDelete() {
 	t := suite.T()
-	svc := suite.Client.Mgmt.Users
+	svc := suite.management.Users
 
 	// Create a user
 	user := createUser(suite)
