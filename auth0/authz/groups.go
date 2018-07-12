@@ -93,10 +93,9 @@ func (svc *GroupsService) CreateMappings(groupID string, mappings []Mapping) err
 }
 
 // DeleteMappings creates one or more mappings for a group
-func (svc *GroupsService) DeleteMappings(groupID string, mappings []Mapping) ([]Mapping, error) {
-	var mappingsResp []Mapping
-	err := svc.c.Delete("/groups/"+groupID+"/mappings", mappings, &mappingsResp)
-	return mappingsResp, err
+func (svc *GroupsService) DeleteMappings(groupID string, mappingIDs []string) error {
+	err := svc.c.Delete("/groups/"+groupID+"/mappings", mappingIDs, nil)
+	return err
 }
 
 // GetMembers gets the members of a group
@@ -161,10 +160,9 @@ func (svc *GroupsService) AddGroupRoles(groupID string, roles []string) error {
 }
 
 // DeleteGroupRoles deletes one or more roles from a group
-func (svc *GroupsService) DeleteGroupRoles(groupID string, roles []string) ([]string, error) {
-	var rolesResp []string
-	err := svc.c.Delete("/groups/"+groupID+"/roles", roles, &rolesResp)
-	return rolesResp, err
+func (svc *GroupsService) DeleteGroupRoles(groupID string, roles []string) error {
+	err := svc.c.Delete("/groups/"+groupID+"/roles", roles, nil)
+	return err
 }
 
 // GetNestedRoles gets roles of nested groups from a group
