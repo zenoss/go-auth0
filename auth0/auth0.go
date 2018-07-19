@@ -3,6 +3,7 @@ package auth0
 import (
 	"context"
 	"fmt"
+	gohttp "net/http"
 	"net/url"
 
 	"github.com/pkg/errors"
@@ -13,30 +14,79 @@ import (
 	"golang.org/x/oauth2/clientcredentials"
 )
 
-// Config is used to create a client that uses the OAuth2 flow
-type Config struct {
-	Tenant           string
-	ClientID         string
-	ClientSecret     string
-	RedirectURI      string
-	AuthorizationURL string
-	Scopes           []string
+// TokenClient is a client to the token endpoint
+func TokenClient(domain string) *TokenService {
+	return &TokenService{
+		&http.Client{
+			Doer: &http.RootClient{
+				Client: &gohttp.Client{},
+			},
+			API: fmt.Sprintf("https://%s", domain),
+		},
+	}
 }
 
-// Auth0 is a client used to make requests to Auth0 APIs
-type Auth0 struct {
-	*http.Client
-	Token *TokenService
-	Authz *authz.AuthorizationService
-	Mgmt  *mgmt.ManagementService
+// API represents an api in Auth0
+type API struct {
+	URL          string
+	Audience     []string
+	ClientID     string
+	ClientSecret string
+	Scopes       []string
 }
 
-// GrantFunc gets an Authorization Grant
+func clientCredentialsConfig(ctx context.Context, domain string, api API) *clientcredentials.Config {
+	return &clientcredentials.Config{
+		ClientID:     api.ClientID,
+		ClientSecret: api.ClientSecret,
+		TokenURL:     fmt.Sprintf("https://%s/oauth/token", domain),
+		Scopes:       api.Scopes,
+		EndpointParams: url.Values{
+			"audience": api.Audience,
+		},
+	}
+}
+
+// ClientFromCredentials follows the returns a go http Client authorized for the given API
+func ClientFromCredentials(domain string, api API) *gohttp.Client {
+	ctx := context.Background()
+	return clientCredentialsConfig(ctx, domain, api).Client(ctx)
+}
+
+// MgmtClientFromCredentials follows the returns a client authorized for the given API
+func MgmtClientFromCredentials(domain string, api API) *mgmt.ManagementService {
+	ctx := context.Background()
+	cfg := clientCredentialsConfig(ctx, domain, api)
+	return mgmt.New(
+		&http.Client{
+			Doer: &http.RootClient{
+				Client: cfg.Client(ctx),
+			},
+			API: api.URL,
+		},
+	)
+}
+
+// AuthzClientFromCredentials follows the returns a client authorized for the given API
+func AuthzClientFromCredentials(domain string, api API) *authz.AuthorizationService {
+	ctx := context.Background()
+	cfg := clientCredentialsConfig(ctx, domain, api)
+	return authz.New(
+		&http.Client{
+			Doer: &http.RootClient{
+				Client: cfg.Client(ctx),
+			},
+			API: api.URL,
+		},
+	)
+}
+
+// GrantFunc is a function that gets an Authorization Grant code
 type GrantFunc func(URL string) (string, error)
 
 // PromptGrant uses stdin/out to get an authorization grant
 func PromptGrant(URL string) (string, error) {
-	fmt.Printf("Visit the URL for the auth dialog: %v\n", URL)
+	fmt.Printf("Visit the URL for the auth dialog, then enter the code: %v\n", URL)
 	var code string
 	if _, err := fmt.Scan(&code); err != nil {
 		return "", errors.Wrap(err, "Unable to get code from input")
@@ -45,18 +95,22 @@ func PromptGrant(URL string) (string, error) {
 	return code, nil
 }
 
-// ClientFromGrant creates a client that follows the standard "3-legged" OAuth2 flow
-func (conf *Config) ClientFromGrant(getGrant GrantFunc) (*Auth0, error) {
-	ctx := context.Background()
-	cfg := &oauth2.Config{
-		ClientID:     conf.ClientID,
-		ClientSecret: conf.ClientSecret,
+func grantConfig(ctx context.Context, domain string, api API) *oauth2.Config {
+	return &oauth2.Config{
+		ClientID:     api.ClientID,
+		ClientSecret: api.ClientSecret,
 		Endpoint: oauth2.Endpoint{
-			AuthURL:  fmt.Sprintf("https://%s.auth0.com/authorize", conf.Tenant),
-			TokenURL: fmt.Sprintf("https://%s.auth0.com/oauth/token", conf.Tenant),
+			AuthURL:  fmt.Sprintf("https://%s/authorize", domain),
+			TokenURL: fmt.Sprintf("https://%s/oauth/token", domain),
 		},
-		Scopes: conf.Scopes,
+		Scopes: api.Scopes,
 	}
+}
+
+// ClientFromGrant follows the 3-legged OAuth2 flow to get an authorized client for the given API
+func ClientFromGrant(domain string, api API, getGrant GrantFunc) (*gohttp.Client, error) {
+	ctx := context.Background()
+	cfg := grantConfig(ctx, domain, api)
 	URL := cfg.AuthCodeURL("state", oauth2.AccessTypeOffline)
 	code, err := getGrant(URL)
 	if err != nil {
@@ -66,51 +120,51 @@ func (conf *Config) ClientFromGrant(getGrant GrantFunc) (*Auth0, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to exchange authorization grant for token")
 	}
-	c := &Auth0{
-		Client: &http.Client{
+	return cfg.Client(ctx, token), nil
+}
+
+// MgmtClientFromGrant follows the 3-legged OAuth2 flow to get an authorized client for the given API
+func MgmtClientFromGrant(domain string, api API, getGrant GrantFunc) (*mgmt.ManagementService, error) {
+	ctx := context.Background()
+	cfg := grantConfig(ctx, domain, api)
+	URL := cfg.AuthCodeURL("state", oauth2.AccessTypeOffline)
+	code, err := getGrant(URL)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to get authorization grant")
+	}
+	token, err := cfg.Exchange(ctx, code)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to exchange authorization grant for token")
+	}
+	return mgmt.New(
+		&http.Client{
 			Doer: &http.RootClient{
 				Client: cfg.Client(ctx, token),
 			},
-			Site: fmt.Sprintf("https://%s.auth0.com", conf.Tenant),
+			API: api.URL,
 		},
-	}
-	c.Token = &TokenService{
-		Client: c.Client,
-	}
-	c.Mgmt = mgmt.New(c.Site, c.Client)
-	if conf.AuthorizationURL != "" {
-		c.Authz = authz.New(conf.AuthorizationURL, c.Client)
-	}
-	return c, nil
+	), nil
 }
 
-// ClientFromCredentials creates a client that follows the "2-legged"
-// Client Credientials OAuth2 flow
-func (conf *Config) ClientFromCredentials(APIs []string) (*Auth0, error) {
+// AuthzClientFromGrant follows the 3-legged OAuth2 flow to get an authorized client for the given API
+func AuthzClientFromGrant(domain string, api API, getGrant GrantFunc) (*authz.AuthorizationService, error) {
 	ctx := context.Background()
-	cfg := &clientcredentials.Config{
-		ClientID:     conf.ClientID,
-		ClientSecret: conf.ClientSecret,
-		TokenURL:     fmt.Sprintf("https://%s.auth0.com/oauth/token", conf.Tenant),
-		Scopes:       conf.Scopes,
-		EndpointParams: url.Values{
-			"audience": APIs,
-		},
+	cfg := grantConfig(ctx, domain, api)
+	URL := cfg.AuthCodeURL("state", oauth2.AccessTypeOffline)
+	code, err := getGrant(URL)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to get authorization grant")
 	}
-	c := &Auth0{
-		Client: &http.Client{
+	token, err := cfg.Exchange(ctx, code)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to exchange authorization grant for token")
+	}
+	return authz.New(
+		&http.Client{
 			Doer: &http.RootClient{
-				Client: cfg.Client(ctx),
+				Client: cfg.Client(ctx, token),
 			},
-			Site: fmt.Sprintf("https://%s.auth0.com", conf.Tenant),
+			API: api.URL,
 		},
-	}
-	c.Token = &TokenService{
-		Client: c.Client,
-	}
-	c.Mgmt = mgmt.New(c.Site, c.Client)
-	if conf.AuthorizationURL != "" {
-		c.Authz = authz.New(conf.AuthorizationURL, c.Client)
-	}
-	return c, nil
+	), nil
 }

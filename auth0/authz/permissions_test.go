@@ -3,8 +3,6 @@
 package authz_test
 
 import (
-	"os"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/zenoss/go-auth0/auth0/authz"
 )
@@ -16,11 +14,11 @@ const (
 )
 
 var (
-	permAppID = os.Getenv("AUTH0_CLIENT_ID")
+	permAppID = getFromEnv("AUTH0_AUTHORIZATION_CLIENT_ID")
 )
 
 func createPerm(suite *AuthzTestSuite) authz.Permission {
-	perm, err := suite.Client.Authz.Permissions.Create(authz.Permission{
+	perm, err := suite.authorization.Permissions.Create(authz.Permission{
 		Name:            permName,
 		Description:     permDesc,
 		ApplicationType: permAppType,
@@ -31,19 +29,19 @@ func createPerm(suite *AuthzTestSuite) authz.Permission {
 }
 
 func getAllPerms(suite *AuthzTestSuite) []authz.Permission {
-	perms, err := suite.Client.Authz.Permissions.GetAll()
+	perms, err := suite.authorization.Permissions.GetAll()
 	assert.Nil(suite.T(), err)
 	return perms
 }
 
 func updatePerm(suite *AuthzTestSuite, perm authz.Permission) authz.Permission {
-	perm, err := suite.Client.Authz.Permissions.Update(perm)
+	perm, err := suite.authorization.Permissions.Update(perm)
 	assert.Nil(suite.T(), err)
 	return perm
 }
 
 func deletePerm(suite *AuthzTestSuite, ID string, ignoreErr bool) {
-	err := suite.Client.Authz.Permissions.Delete(ID)
+	err := suite.authorization.Permissions.Delete(ID)
 	if !ignoreErr {
 		assert.Nil(suite.T(), err)
 	}
@@ -65,7 +63,7 @@ func cleanUpPerms(suite *AuthzTestSuite) {
 
 func (suite *AuthzTestSuite) TestPermsCreateGetAllDelete() {
 	t := suite.T()
-	svc := suite.Client.Authz.Permissions
+	svc := suite.authorization.Permissions
 	// Create a permission
 	permission := createPerm(suite)
 	assert.Equal(suite.T(), permName, permission.Name)

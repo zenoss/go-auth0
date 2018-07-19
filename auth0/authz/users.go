@@ -24,7 +24,7 @@ func (svc *UsersService) GetGroups(ID string, expand bool) ([]GroupStub, error) 
 	if expand {
 		item += "?expand"
 	}
-	err := svc.c.Get("/api/users"+item, &groupResp)
+	err := svc.c.Get("/users"+item, &groupResp)
 	if err != nil {
 		return nil, errors.Wrap(err, "go-auth0: cannot get groups for user")
 	}
@@ -33,7 +33,7 @@ func (svc *UsersService) GetGroups(ID string, expand bool) ([]GroupStub, error) 
 
 // AddGroups puts the user in one or more groups
 func (svc *UsersService) AddGroups(ID string, groups []string) error {
-	err := svc.c.Patch("/api/users/"+ID+"/groups", &groups, nil)
+	err := svc.c.Patch("/users/"+ID+"/groups", &groups, nil)
 	if err != nil {
 		return errors.Wrap(err, "go-auth0: cannot add groups for user")
 	}
@@ -43,7 +43,7 @@ func (svc *UsersService) AddGroups(ID string, groups []string) error {
 // GetAllGroups returns the groups for a user including nested groups
 func (svc *UsersService) GetAllGroups(ID string) ([]GroupStub, error) {
 	var groupResp []GroupStub
-	err := svc.c.Get("/api/users/"+ID+"/groups/calculate", &groupResp)
+	err := svc.c.Get("/users/"+ID+"/groups/calculate", &groupResp)
 	if err != nil {
 		return nil, errors.Wrap(err, "go-auth0: cannot get groups for user")
 	}
@@ -53,7 +53,7 @@ func (svc *UsersService) GetAllGroups(ID string) ([]GroupStub, error) {
 // GetRoles returns the roles for a user
 func (svc *UsersService) GetRoles(ID string) ([]Role, error) {
 	var roleResp []Role
-	err := svc.c.Get("/api/users/"+ID+"/roles", &roleResp)
+	err := svc.c.Get("/users/"+ID+"/roles", &roleResp)
 	if err != nil {
 		return nil, errors.Wrap(err, "go-auth0: cannot get roles for user")
 	}
@@ -66,7 +66,7 @@ func (svc *UsersService) GetRoles(ID string) ([]Role, error) {
 
 // AddRoles gives the user one or more roles
 func (svc *UsersService) AddRoles(ID string, roles []string) error {
-	err := svc.c.Patch("/api/users/"+ID+"/roles", &roles, nil)
+	err := svc.c.Patch("/users/"+ID+"/roles", &roles, nil)
 	if err != nil {
 		return errors.Wrap(err, "go-auth0: cannot add roles for user")
 	}
@@ -75,7 +75,7 @@ func (svc *UsersService) AddRoles(ID string, roles []string) error {
 
 // RemoveRoles removes one or more roles from the user
 func (svc *UsersService) RemoveRoles(ID string, roles []string) error {
-	err := svc.c.Delete("/api/users/"+ID+"/roles", &roles, nil)
+	err := svc.c.Delete("/users/"+ID+"/roles", &roles, nil)
 	if err != nil {
 		return errors.Wrap(err, "go-auth0: cannot add roles for user")
 	}
@@ -85,7 +85,7 @@ func (svc *UsersService) RemoveRoles(ID string, roles []string) error {
 // GetAllRoles returns all roles for a user, including through group membership
 func (svc *UsersService) GetAllRoles(ID string) ([]Role, error) {
 	var roleResp []Role
-	err := svc.c.Get("/api/users/"+ID+"/roles/calculate", &roleResp)
+	err := svc.c.Get("/users/"+ID+"/roles/calculate", &roleResp)
 	if err != nil {
 		return nil, errors.Wrap(err, "go-auth0: cannot get all roles for user")
 	}
@@ -105,5 +105,5 @@ func (svc *UsersService) ExecAuthPolicy(ID, policyID, connection string, groups 
 		ConnectionName: connection,
 		Groups:         groups,
 	}
-	return svc.c.Post("/api/users/"+ID+"/policy/"+policyID, body, nil)
+	return svc.c.Post("/users/"+ID+"/policy/"+policyID, body, nil)
 }

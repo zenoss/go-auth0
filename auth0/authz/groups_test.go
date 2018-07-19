@@ -13,19 +13,19 @@ const (
 )
 
 func createGroup(suite *AuthzTestSuite) authz.GroupStub {
-	stub, err := suite.Client.Authz.Groups.Create(groupName, groupDesc)
+	stub, err := suite.authorization.Groups.Create(groupName, groupDesc)
 	assert.Nil(suite.T(), err)
 	return stub
 }
 
 func getAllGroups(suite *AuthzTestSuite) []authz.Group {
-	groups, err := suite.Client.Authz.Groups.GetAll()
+	groups, err := suite.authorization.Groups.GetAll()
 	assert.Nil(suite.T(), err)
 	return groups
 }
 
 func deleteGroup(suite *AuthzTestSuite, ID string, ignoreErr bool) {
-	err := suite.Client.Authz.Groups.Delete(ID)
+	err := suite.authorization.Groups.Delete(ID)
 	if !ignoreErr {
 		assert.Nil(suite.T(), err)
 	}
@@ -49,7 +49,7 @@ func (suite *AuthzTestSuite) SetupTest() {
 
 func (suite *AuthzTestSuite) TestGroupsCreateGetAllDelete() {
 	t := suite.T()
-	svc := suite.Client.Authz.Groups
+	svc := suite.authorization.Groups
 	// Create a group
 	stub := createGroup(suite)
 	assert.Equal(suite.T(), groupName, stub.Name)

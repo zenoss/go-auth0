@@ -1,8 +1,6 @@
 package auth0
 
 import (
-	"encoding/json"
-
 	"github.com/pkg/errors"
 	"github.com/zenoss/go-auth0/auth0/http"
 )
@@ -10,7 +8,6 @@ import (
 // TokenService provides a service for token related functions
 type TokenService struct {
 	*http.Client
-	API string
 }
 
 // TokenResponseBody contains token related information returned
@@ -46,11 +43,7 @@ type TokenRequestBody struct {
 // an access token, token type, and expiration
 func (svc *TokenService) GetToken(body TokenRequestBody) (*TokenResponseBody, error) {
 	var resBody TokenResponseBody
-	reqBody, err := json.Marshal(body)
-	if err != nil {
-		return &resBody, errors.Wrap(err, "Cannot marshal TokenRequestBody")
-	}
-	err = svc.Post("/oauth/token", reqBody, &resBody)
+	err := svc.Post("/oauth/token", body, &resBody)
 	if err != nil {
 		return nil, errors.Wrap(err, "Cannot complete token request")
 	}
@@ -59,12 +52,12 @@ func (svc *TokenService) GetToken(body TokenRequestBody) (*TokenResponseBody, er
 
 // GetTokenFromClientCreds gets an access token to the target API
 // using client credientials to authenticate
-func (svc *TokenService) GetTokenFromClientCreds(clientID, clientSecret, API string) (*TokenResponseBody, error) {
+func (svc *TokenService) GetTokenFromClientCreds(clientID, clientSecret, audience string) (*TokenResponseBody, error) {
 	body := TokenRequestBody{
 		GrantType:    "client_credentials",
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
-		Audience:     API,
+		Audience:     audience,
 	}
 	return svc.GetToken(body)
 }

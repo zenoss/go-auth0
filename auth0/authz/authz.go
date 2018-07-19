@@ -1,7 +1,7 @@
 package authz
 
 import (
-	http "github.com/zenoss/go-auth0/auth0/http"
+	"github.com/zenoss/go-auth0/auth0/http"
 )
 
 // AuthorizationService is a gateway to Auth0 Authorization Extension services
@@ -15,12 +15,9 @@ type AuthorizationService struct {
 
 // New creates a new AuthorizationService, backed by client, whose
 // Authorization extension lives at site
-func New(site string, client *http.Client) *AuthorizationService {
+func New(client *http.Client) *AuthorizationService {
 	authz := &AuthorizationService{
-		Client: &http.Client{
-			Doer: client,
-			Site: site,
-		},
+		Client: client,
 	}
 	authz.Groups = &GroupsService{
 		c: authz.Client,
