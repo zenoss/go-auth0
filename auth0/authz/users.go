@@ -5,6 +5,18 @@ import (
 	"github.com/zenoss/go-auth0/auth0/http"
 )
 
+// AuthorizationUsersService is an interface to the Auth0 Authorization Users API
+type AuthorizationUsersService interface {
+	GetGroups(ID string, expand bool) ([]GroupStub, error)
+	AddGroups(ID string, groups []string) error
+	GetAllGroups(ID string) ([]GroupStub, error)
+	GetRoles(ID string) ([]Role, error)
+	AddRoles(ID string, roles []string) error
+	RemoveRoles(ID string, roles []string) error
+	GetAllRoles(ID string) ([]Role, error)
+	ExecAuthPolicy(ID, policyID, connection string, groups []string) error
+}
+
 // UsersService provides a service for user related functions
 type UsersService struct {
 	c *http.Client

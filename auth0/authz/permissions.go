@@ -4,6 +4,15 @@ import (
 	"github.com/zenoss/go-auth0/auth0/http"
 )
 
+// AuthorizationPermissionsService is an interface to the Auth0 Authorization Permissions API
+type AuthorizationPermissionsService interface {
+	GetAll() ([]Permission, error)
+	Get(ID string) (Permission, error)
+	Create(perm Permission) (Permission, error)
+	Delete(ID string) error
+	Update(perm Permission) (Permission, error)
+}
+
 // PermissionsService provides a service for permission related functions
 type PermissionsService struct {
 	c *http.Client

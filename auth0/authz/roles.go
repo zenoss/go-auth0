@@ -4,6 +4,15 @@ import (
 	"github.com/zenoss/go-auth0/auth0/http"
 )
 
+// AuthorizationRolesService is an interface to the Auth0 Authorization Roles API
+type AuthorizationRolesService interface {
+	GetAll() ([]Role, error)
+	Get(ID string) (Role, error)
+	Create(r Role) (Role, error)
+	Delete(ID string) error
+	Update(r Role) (Role, error)
+}
+
 // RolesService provides a service for role related functions
 type RolesService struct {
 	c *http.Client

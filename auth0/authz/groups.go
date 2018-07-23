@@ -5,6 +5,29 @@ import (
 	"github.com/zenoss/go-auth0/auth0/http"
 )
 
+// AuthorizationGroupsService is an interface to the Auth0 Authorization Groups API
+type AuthorizationGroupsService interface {
+	GetAll() ([]Group, error)
+	Get(groupID string, expand bool) (Group, error)
+	Create(name, description string) (GroupStub, error)
+	Delete(groupID string) error
+	Update(stub GroupStub) (GroupStub, error)
+	GetMappings(groupID string) ([]Mapping, error)
+	CreateMappings(groupID string, mappings []Mapping) error
+	DeleteMappings(groupID string, mappingIDs []string) error
+	GetMembers(groupID string) ([]string, error)
+	AddMembers(groupID string, members []string) ([]string, error)
+	DeleteMembers(groupID string, members []string) error
+	GetNestedMembers(groupID string) ([]string, error)
+	GetNestedGroups(groupID string) ([]string, error)
+	AddNestedGroups(groupID string, groups []string) ([]string, error)
+	DeleteNestedGroups(groupID string, groups []string) ([]string, error)
+	GetGroupRoles(groupID string) ([]string, error)
+	AddGroupRoles(groupID string, roles []string) error
+	DeleteGroupRoles(groupID string, roles []string) error
+	GetNestedRoles(groupID string) ([]string, error)
+}
+
 // GroupsService provides a service for group related functions
 type GroupsService struct {
 	c *http.Client
