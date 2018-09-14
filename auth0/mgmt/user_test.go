@@ -3,6 +3,8 @@
 package mgmt_test
 
 import (
+	"fmt"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/zenoss/go-auth0/auth0/mgmt"
 )
@@ -24,6 +26,12 @@ func createUser(suite *ManagementTestSuite) mgmt.User {
 
 func getAllUsers(suite *ManagementTestSuite) []mgmt.User {
 	users, err := suite.management.Users.GetAll()
+	assert.Nil(suite.T(), err)
+	return users
+}
+
+func searchUsers(suite *ManagementTestSuite, searchOpts mgmt.SearchUsersOpts) []mgmt.User {
+	users, err := suite.management.Users.Search(searchOpts)
 	assert.Nil(suite.T(), err)
 	return users
 }
@@ -61,6 +69,14 @@ func (suite *ManagementTestSuite) TestUsersCreateGetAllDelete() {
 	user, err := svc.Get(user.ID)
 	assert.Nil(t, err)
 	assert.Equal(t, userEmail, user.Email)
+
+	// Check that we can search
+	searchOpts := mgmt.SearchUsersOpts{
+		Q: fmt.Sprintf(`email:"%s"`, userEmail),
+	}
+	users, err := svc.Search(searchOpts)
+	assert.Nil(t, err)
+	assert.NotNil(t, users)
 
 	// Update it
 	update := mgmt.UserUpdateOpts{

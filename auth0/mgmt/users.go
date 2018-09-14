@@ -1,6 +1,9 @@
 package mgmt
 
 import (
+	"fmt"
+
+	"github.com/google/go-querystring/query"
 	"github.com/zenoss/go-auth0/auth0/http"
 )
 
@@ -67,6 +70,27 @@ type UserUpdateOpts struct {
 	ClientID          string                 `json:"client_id,omitempty"`
 }
 
+// SearchUsersOpts are options which can be used to used to search users
+type SearchUsersOpts struct {
+	PerPage       int    `url:"per_page,omitempty"`
+	Page          int    `url:"page,omitempty"`
+	IncludeTotals bool   `url:"include_totals,omitempty"`
+	Sort          string `url:"sort,omitempty"`
+	Connection    string `url:"connection,omitempty"`
+	Fields        string `url:"fields,omitempty"`
+	IncludeFields bool   `url:"include_fields,omitempty"`
+	Q             string `url:"q,omitempty"`
+	SearchEngine  string `url:"search_engine,omitempty"`
+}
+
+func (opts *SearchUsersOpts) Encode() (string, error) {
+	vals, err := query.Values(opts)
+	if err != nil {
+		return "", err
+	}
+	return vals.Encode(), nil
+}
+
 // Identity is the identity of a user in Auth0
 type Identity struct {
 	Connection string `json:"connection,omitempty"`
@@ -87,6 +111,21 @@ func (svc *UsersService) Get(userID string) (User, error) {
 	var user User
 	err := svc.c.Get("/users/"+userID, &user)
 	return user, err
+}
+
+// Search retrieves users according to search criteria
+func (svc *UsersService) Search(opts SearchUsersOpts) ([]User, error) {
+	var users []User
+	queryString, err := opts.Encode()
+	if err != nil {
+		return nil, err
+	}
+	url := "/users"
+	if queryString != "" {
+		url = fmt.Sprintf("/users?=%s", queryString)
+	}
+	err = svc.c.Get(url, &users)
+	return users, err
 }
 
 // Create creates a user
