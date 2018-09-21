@@ -50,6 +50,8 @@ type UserOpts struct {
 	VerifyEmail   bool                   `json:"verify_email,omitempty"`
 	PhoneVerified bool                   `json:"phone_verified,omitempty"`
 	AppMetadata   map[string]interface{} `json:"app_metadata,omitempty"`
+	FamilyName    string                 `json:"family_name,omitempty"`
+	GivenName     string                 `json:"given_name,omitempty"`
 }
 
 // UserUpdateOpts are options which can be used to update a user
@@ -83,6 +85,7 @@ type SearchUsersOpts struct {
 	SearchEngine  string `url:"search_engine,omitempty"`
 }
 
+// Encode creates a url.Values encoding of SearchUserOpts.
 func (opts *SearchUsersOpts) Encode() (string, error) {
 	vals, err := query.Values(opts)
 	if err != nil {
@@ -122,7 +125,7 @@ func (svc *UsersService) Search(opts SearchUsersOpts) ([]User, error) {
 	}
 	url := "/users"
 	if queryString != "" {
-		url = fmt.Sprintf("/users?=%s", queryString)
+		url = fmt.Sprintf("/users?%s", queryString)
 	}
 	err = svc.c.Get(url, &users)
 	return users, err
