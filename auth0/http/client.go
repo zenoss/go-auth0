@@ -90,16 +90,24 @@ func noSlash(uri string) string {
 }
 
 // Get performs a get to the endpoint of the API associated with the client
-func (c *Client) Get(endpoint string, respBody interface{}) error {
+func (c *Client) GetWithAgent(endpoint string, respBody interface{}, agent string) error {
 	req, err := http.NewRequest("GET", noSlash(c.API)+endpoint, http.NoBody)
 	if err != nil {
 		return errors.Wrap(err, "Cannot create request")
 	}
+	if len(strings.TrimSpace(agent)) > 0 {
+		req.Header.Add("User-Agent", agent)
+	}
 	return c.Doer.Do(req, respBody)
 }
 
+// Get performs a get to the endpoint of the API associated with the client
+func (c *Client) Get(endpoint string, respBody interface{}) error {
+	return c.GetWithAgent(endpoint, respBody, "")
+}
+
 // Post performs a post to the endpoint of the API associated with the client
-func (c *Client) Post(endpoint string, body interface{}, respBody interface{}) error {
+func (c *Client) PostWithAgent(endpoint string, body interface{}, respBody interface{}, agent string) error {
 	data, err := json.Marshal(body)
 	if err != nil {
 		return errors.Wrap(err, "Cannot marshal body")
@@ -108,11 +116,19 @@ func (c *Client) Post(endpoint string, body interface{}, respBody interface{}) e
 	if err != nil {
 		return errors.Wrap(err, "Cannot create request")
 	}
+	if len(strings.TrimSpace(agent)) > 0 {
+		req.Header.Add("User-Agent", agent)
+	}
 	return c.Doer.Do(req, respBody)
 }
 
+// Post performs a post to the endpoint of the API associated with the client
+func (c *Client) Post(endpoint string, body interface{}, respBody interface{}) error {
+	return c.PostWithAgent(endpoint, body, respBody, "")
+}
+
 // Put performs a put to the endpoint of the API associated with the client
-func (c *Client) Put(endpoint string, body interface{}, respBody interface{}) error {
+func (c *Client) PutWithAgent(endpoint string, body interface{}, respBody interface{}, agent string) error {
 	data, err := json.Marshal(body)
 	if err != nil {
 		return errors.Wrap(err, "Cannot marshal body")
@@ -121,11 +137,19 @@ func (c *Client) Put(endpoint string, body interface{}, respBody interface{}) er
 	if err != nil {
 		return errors.Wrap(err, "Cannot create request")
 	}
+	if len(strings.TrimSpace(agent)) > 0 {
+		req.Header.Add("User-Agent", agent)
+	}
 	return c.Doer.Do(req, respBody)
 }
 
+// Put performs a put to the endpoint of the API associated with the client
+func (c *Client) Put(endpoint string, body interface{}, respBody interface{}) error {
+	return c.PutWithAgent(endpoint, body, respBody, "")
+}
+
 // Patch performs a patch to the endpoint of the API associated with the client
-func (c *Client) Patch(endpoint string, body interface{}, respBody interface{}) error {
+func (c *Client) PatchWithAgent(endpoint string, body interface{}, respBody interface{}, agent string) error {
 	data, err := json.Marshal(body)
 	if err != nil {
 		return errors.Wrap(err, "Cannot marshal body")
@@ -134,11 +158,19 @@ func (c *Client) Patch(endpoint string, body interface{}, respBody interface{}) 
 	if err != nil {
 		return errors.Wrap(err, "Cannot create request")
 	}
+	if len(strings.TrimSpace(agent)) > 0 {
+		req.Header.Add("User-Agent", agent)
+	}
 	return c.Doer.Do(req, respBody)
 }
 
+// Patch performs a patch to the endpoint of the API associated with the client
+func (c *Client) Patch(endpoint string, body interface{}, respBody interface{}) error {
+	return c.PatchWithAgent(endpoint, body, respBody, "")
+}
+
 // Delete performs a delete to the endpoint of the API associated with the client
-func (c *Client) Delete(endpoint string, body interface{}, respBody interface{}) error {
+func (c *Client) DeleteWithAgent(endpoint string, body interface{}, respBody interface{}, agent string) error {
 	data, err := json.Marshal(body)
 	if err != nil {
 		return errors.Wrap(err, "Cannot marshal body")
@@ -147,5 +179,13 @@ func (c *Client) Delete(endpoint string, body interface{}, respBody interface{})
 	if err != nil {
 		return errors.Wrap(err, "Cannot create request")
 	}
+	if len(strings.TrimSpace(agent)) > 0 {
+		req.Header.Add("User-Agent", agent)
+	}
 	return c.Doer.Do(req, respBody)
+}
+
+// Delete performs a delete to the endpoint of the API associated with the client
+func (c *Client) Delete(endpoint string, body interface{}, respBody interface{}) error {
+	return c.DeleteWithAgent(endpoint, body, respBody, "")
 }
