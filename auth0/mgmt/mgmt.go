@@ -8,6 +8,7 @@ import (
 type ManagementService struct {
 	*http.Client
 	Users *UsersService
+	DeviceCredentials *DeviceCredentials
 }
 
 // New creates a new ManagementService, backed by client
@@ -16,6 +17,9 @@ func New(client *http.Client) *ManagementService {
 		Client: client,
 	}
 	mgmt.Users = &UsersService{
+		c: mgmt.Client,
+	}
+	mgmt.DeviceCredentials = &DeviceCredentials{
 		c: mgmt.Client,
 	}
 	return mgmt

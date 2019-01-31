@@ -90,24 +90,26 @@ func noSlash(uri string) string {
 }
 
 // Get performs a get to the endpoint of the API associated with the client
-func (c *Client) GetWithAgent(endpoint string, respBody interface{}, agent string) error {
+func (c *Client) GetWithHeaders(endpoint string, respBody interface{}, headers map[string]string) error {
 	req, err := http.NewRequest("GET", noSlash(c.API)+endpoint, http.NoBody)
 	if err != nil {
 		return errors.Wrap(err, "Cannot create request")
 	}
-	if len(strings.TrimSpace(agent)) > 0 {
-		req.Header.Add("User-Agent", agent)
+	for key, value := range headers {
+		if len(strings.TrimSpace(key)) > 0 && len(strings.TrimSpace(value)) > 0 {
+			req.Header.Add(key, value)
+		}
 	}
 	return c.Doer.Do(req, respBody)
 }
 
 // Get performs a get to the endpoint of the API associated with the client
 func (c *Client) Get(endpoint string, respBody interface{}) error {
-	return c.GetWithAgent(endpoint, respBody, "")
+	return c.GetWithHeaders(endpoint, respBody, map[string]string{})
 }
 
 // Post performs a post to the endpoint of the API associated with the client
-func (c *Client) PostWithAgent(endpoint string, body interface{}, respBody interface{}, agent string) error {
+func (c *Client) PostWithHeaders(endpoint string, body interface{}, respBody interface{}, headers map[string]string) error {
 	data, err := json.Marshal(body)
 	if err != nil {
 		return errors.Wrap(err, "Cannot marshal body")
@@ -116,19 +118,21 @@ func (c *Client) PostWithAgent(endpoint string, body interface{}, respBody inter
 	if err != nil {
 		return errors.Wrap(err, "Cannot create request")
 	}
-	if len(strings.TrimSpace(agent)) > 0 {
-		req.Header.Add("User-Agent", agent)
+	for key, value := range headers {
+		if len(strings.TrimSpace(key)) > 0 && len(strings.TrimSpace(value)) > 0 {
+			req.Header.Add(key, value)
+		}
 	}
 	return c.Doer.Do(req, respBody)
 }
 
 // Post performs a post to the endpoint of the API associated with the client
 func (c *Client) Post(endpoint string, body interface{}, respBody interface{}) error {
-	return c.PostWithAgent(endpoint, body, respBody, "")
+	return c.PostWithHeaders(endpoint, body, respBody, map[string]string{})
 }
 
 // Put performs a put to the endpoint of the API associated with the client
-func (c *Client) PutWithAgent(endpoint string, body interface{}, respBody interface{}, agent string) error {
+func (c *Client) PutWithHeaders(endpoint string, body interface{}, respBody interface{}, headers map[string]string) error {
 	data, err := json.Marshal(body)
 	if err != nil {
 		return errors.Wrap(err, "Cannot marshal body")
@@ -137,19 +141,21 @@ func (c *Client) PutWithAgent(endpoint string, body interface{}, respBody interf
 	if err != nil {
 		return errors.Wrap(err, "Cannot create request")
 	}
-	if len(strings.TrimSpace(agent)) > 0 {
-		req.Header.Add("User-Agent", agent)
+	for key, value := range headers {
+		if len(strings.TrimSpace(key)) > 0 && len(strings.TrimSpace(value)) > 0 {
+			req.Header.Add(key, value)
+		}
 	}
 	return c.Doer.Do(req, respBody)
 }
 
 // Put performs a put to the endpoint of the API associated with the client
 func (c *Client) Put(endpoint string, body interface{}, respBody interface{}) error {
-	return c.PutWithAgent(endpoint, body, respBody, "")
+	return c.PutWithHeaders(endpoint, body, respBody, map[string]string{})
 }
 
 // Patch performs a patch to the endpoint of the API associated with the client
-func (c *Client) PatchWithAgent(endpoint string, body interface{}, respBody interface{}, agent string) error {
+func (c *Client) PatchWithHeaders(endpoint string, body interface{}, respBody interface{}, headers map[string]string) error {
 	data, err := json.Marshal(body)
 	if err != nil {
 		return errors.Wrap(err, "Cannot marshal body")
@@ -158,19 +164,21 @@ func (c *Client) PatchWithAgent(endpoint string, body interface{}, respBody inte
 	if err != nil {
 		return errors.Wrap(err, "Cannot create request")
 	}
-	if len(strings.TrimSpace(agent)) > 0 {
-		req.Header.Add("User-Agent", agent)
+	for key, value := range headers {
+		if len(strings.TrimSpace(key)) > 0 && len(strings.TrimSpace(value)) > 0 {
+			req.Header.Add(key, value)
+		}
 	}
 	return c.Doer.Do(req, respBody)
 }
 
 // Patch performs a patch to the endpoint of the API associated with the client
 func (c *Client) Patch(endpoint string, body interface{}, respBody interface{}) error {
-	return c.PatchWithAgent(endpoint, body, respBody, "")
+	return c.PatchWithHeaders(endpoint, body, respBody, map[string]string{})
 }
 
 // Delete performs a delete to the endpoint of the API associated with the client
-func (c *Client) DeleteWithAgent(endpoint string, body interface{}, respBody interface{}, agent string) error {
+func (c *Client) DeleteWithHeaders(endpoint string, body interface{}, respBody interface{}, headers map[string]string) error {
 	data, err := json.Marshal(body)
 	if err != nil {
 		return errors.Wrap(err, "Cannot marshal body")
@@ -179,13 +187,15 @@ func (c *Client) DeleteWithAgent(endpoint string, body interface{}, respBody int
 	if err != nil {
 		return errors.Wrap(err, "Cannot create request")
 	}
-	if len(strings.TrimSpace(agent)) > 0 {
-		req.Header.Add("User-Agent", agent)
+	for key, value := range headers {
+		if len(strings.TrimSpace(key)) > 0 && len(strings.TrimSpace(value)) > 0 {
+			req.Header.Add(key, value)
+		}
 	}
 	return c.Doer.Do(req, respBody)
 }
 
 // Delete performs a delete to the endpoint of the API associated with the client
 func (c *Client) Delete(endpoint string, body interface{}, respBody interface{}) error {
-	return c.DeleteWithAgent(endpoint, body, respBody, "")
+	return c.DeleteWithHeaders(endpoint, body, respBody, map[string]string{})
 }

@@ -45,7 +45,10 @@ type TokenRequestBody struct {
 func (svc *TokenService) GetToken(body TokenRequestBody) (*TokenResponseBody, error) {
 	var resBody TokenResponseBody
 	// Auth0 is using the User-Agent as the device identifier; pass that in as the user agent.
-	err := svc.PostWithAgent("/oauth/token", body, &resBody, body.Device)
+	headers := map[string]string {
+		"User-Agent": body.Device,
+	}
+	err := svc.PostWithHeaders("/oauth/token", body, &resBody, headers)
 	if err != nil {
 		return nil, errors.Wrap(err, "Cannot complete token request")
 	}
