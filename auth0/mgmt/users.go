@@ -2,7 +2,6 @@ package mgmt
 
 import (
 	"fmt"
-
 	"github.com/google/go-querystring/query"
 	"github.com/zenoss/go-auth0/auth0/http"
 )

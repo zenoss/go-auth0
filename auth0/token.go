@@ -36,14 +36,19 @@ type TokenRequestBody struct {
 	RedirectURI  string `json:"redirect_uri,omitempty"`
 	Realm        string `json:"realm,omitempty"`
 	RefreshToken string `json:"refresh_token,omitempty"`
+	Device       string `json:"device,omitempty"`
 }
 
 // GetToken performs a generic call to /oauth/token using the body defined
 // in a TokenRequestBody to get a TokenResponseBody, containing, at minimum,
-// an access token, token type, and expiration
+// an access token, token type, and expiration.
 func (svc *TokenService) GetToken(body TokenRequestBody) (*TokenResponseBody, error) {
 	var resBody TokenResponseBody
-	err := svc.Post("/oauth/token", body, &resBody)
+	// Auth0 is using the User-Agent as the device identifier; pass that in as the user agent.
+	headers := map[string]string {
+		"User-Agent": body.Device,
+	}
+	err := svc.PostWithHeaders("/oauth/token", body, &resBody, headers)
 	if err != nil {
 		return nil, errors.Wrap(err, "Cannot complete token request")
 	}
