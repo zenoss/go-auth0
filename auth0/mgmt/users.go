@@ -142,6 +142,10 @@ func (svc *UsersService) Delete(userID string) error {
 	return svc.c.Delete("/users/"+userID, nil, nil)
 }
 
+func (svc *UsersService) DeleteWithBody(userID string, body interface{}) error {
+	return svc.c.Delete("/users/"+userID, &body, nil)
+}
+
 // Update updates a user
 func (svc *UsersService) Update(userID string, opts UserUpdateOpts) (User, error) {
 	var user User
