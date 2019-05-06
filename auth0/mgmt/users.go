@@ -2,6 +2,7 @@ package mgmt
 
 import (
 	"fmt"
+
 	"github.com/google/go-querystring/query"
 	"github.com/zenoss/go-auth0/auth0/http"
 )
@@ -69,6 +70,8 @@ type UserUpdateOpts struct {
 	Connection        string                 `json:"connection,omitempty"`
 	Username          string                 `json:"username,omitempty"`
 	ClientID          string                 `json:"client_id,omitempty"`
+	FamilyName        string                 `json:"family_name,omitempty"`
+	GivenName         string                 `json:"given_name,omitempty"`
 }
 
 // SearchUsersOpts are options which can be used to used to search users
