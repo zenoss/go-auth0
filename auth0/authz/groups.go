@@ -2,7 +2,7 @@ package authz
 
 import (
 	"github.com/pkg/errors"
-	"github.com/zenoss/go-auth0/auth0/mgmt"
+	"github.com/casbin/go-auth0/auth0/mgmt"
 )
 
 // GroupsService provides a service for group related functions

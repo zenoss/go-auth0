@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"github.com/zenoss/go-auth0/auth0"
+	"github.com/casbin/go-auth0/auth0"
 )
 
 type AuthzTestSuite struct {
