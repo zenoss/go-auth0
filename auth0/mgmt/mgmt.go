@@ -7,8 +7,9 @@ import (
 // ManagementService is a gateway to Auth0 Management services
 type ManagementService struct {
 	*http.Client
-	Users *UsersService
+	Users             *UsersService
 	DeviceCredentials *DeviceCredentials
+	Logs              *LogsService
 }
 
 // New creates a new ManagementService, backed by client
@@ -20,6 +21,9 @@ func New(client *http.Client) *ManagementService {
 		c: mgmt.Client,
 	}
 	mgmt.DeviceCredentials = &DeviceCredentials{
+		c: mgmt.Client,
+	}
+	mgmt.Logs = &LogsService{
 		c: mgmt.Client,
 	}
 	return mgmt
