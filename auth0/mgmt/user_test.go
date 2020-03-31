@@ -30,10 +30,10 @@ func getAllUsers(suite *ManagementTestSuite) []mgmt.User {
 	return users
 }
 
-func searchUsers(suite *ManagementTestSuite, searchOpts mgmt.SearchUsersOpts) []mgmt.User {
-	users, err := suite.management.Users.Search(searchOpts)
+func searchUsers(suite *ManagementTestSuite, searchOpts mgmt.SearchUsersOpts) []mgmt.UsersPage {
+	usersPage, err := suite.management.Users.Search(searchOpts)
 	assert.Nil(suite.T(), err)
-	return users
+	return usersPage
 }
 
 func deleteUser(suite *ManagementTestSuite, ID string, ignoreErr bool) {
