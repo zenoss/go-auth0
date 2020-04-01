@@ -619,6 +619,34 @@ const testJson = `{
   "total": 52
 }`
 
+const testJsonUsers = `
+[
+  {
+    "created_at": "2020-03-30T14:09:02.845Z",
+    "email": "joedoe5@gmail.com",
+    "email_verified": false,
+    "family_name": "doe5",
+    "given_name": "joe5",
+    "identities": [
+      {
+        "user_id": "tenant:lysa2603:bq0vqvlh7q0ts9vrp6o0",
+        "connection": "Username-Password-Authentication",
+        "provider": "auth0",
+        "isSocial": false
+      }
+    ],
+    "name": "joedoe5@gmail.com",
+    "nickname": "joedoe5",
+    "picture": "https://s.gravatar.com/avatar/c24fdbfc376c72ad673cf9bb5a5699ca?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fjo.png",
+    "updated_at": "2020-03-30T14:09:02.845Z",
+    "user_id": "auth0|tenant:lysa2603:bq0vqvlh7q0ts9vrp6o0",
+    "app_metadata": {
+      "tenant": "lysa2603"
+    }
+  }
+]
+`
+
 func TestUserSearch(t *testing.T) {
     var mockDoer = &mocks.Doer{}
     mockHTTPRequest := mock.AnythingOfType("*http.Request")
@@ -634,10 +662,10 @@ func TestUserSearch(t *testing.T) {
             }
             err := json.Unmarshal([]byte(testJson), respBody)
             assert.Nilf(t, err, "failed to unmarshal JSON %q", err)
-        })
+        }).Once()
     //usersPage, err := svc.Users.Search(opts)
     opts := mgmt.SearchUsersOpts{
-        Q:             fmt.Sprintf(`app_metadata.tenant:"%s" AND identities.connection:"%s"`, "lysa2603", "Username-Password-Database"),
+        Q:             fmt.Sprintf(`app_metadata.tenant:"%s" AND identities.connection:"%s"`, "lysa2603", "Username-Password-Authentication"),
         SearchEngine:  "v3",
         IncludeTotals: true,
         Page:          0,
@@ -650,4 +678,20 @@ func TestUserSearch(t *testing.T) {
     assert.Equal(t, resp.Length, 26)
     assert.Equal(t, resp.Total, 52)
     assert.NotEmpty(t, resp.Users)
+    mockDoer.On("Do", mockHTTPRequest, mock.Anything).
+        Return(nil).
+        Run(func(args mock.Arguments) {
+            respBody, ok := args.Get(1).(*[]mgmt.User)
+            if !ok {
+                t.Errorf("response body should be of type %t", reflect.TypeOf(&[]mgmt.User{}))
+            }
+            err := json.Unmarshal([]byte(testJsonUsers), respBody)
+            assert.Nilf(t, err, "failed to unmarshal JSON %q", err)
+        }).Once()
+    opts.IncludeTotals = false
+    resp2, err := svc.Users.Search(opts)
+    assert.Nil(t, err)
+    assert.NotNil(t, resp2)
+    assert.NotEmpty(t, resp2.Users)
+
 }
