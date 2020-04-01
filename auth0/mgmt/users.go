@@ -1,9 +1,9 @@
 package mgmt
 
 import (
-	"fmt"
-	"github.com/google/go-querystring/query"
-	"github.com/zenoss/go-auth0/auth0/http"
+    "fmt"
+    "github.com/google/go-querystring/query"
+    "github.com/zenoss/go-auth0/auth0/http"
 )
 
 // UsersService provides a service for user related functions
@@ -34,6 +34,14 @@ type User struct {
 	Blocked       bool                   `json:"blocked,omitempty"`
 	FirstName     string                 `json:"given_name,omitempty"`
 	LastName      string                 `json:"family_name,omitempty"`
+}
+
+type UsersPage struct {
+    Start  int `json:"start,omitempty"`
+    Limit  int `json:"limit,omitempty"`
+    Length int `json:"length,omitempty"`
+    Total int `json:"total,omitempty"`
+    Users []User `json:"users,omitempty"`
 }
 
 // UserOpts are options which can be used to create a User
@@ -116,8 +124,8 @@ func (svc *UsersService) Get(userID string) (User, error) {
 }
 
 // Search retrieves users according to search criteria
-func (svc *UsersService) Search(opts SearchUsersOpts) ([]User, error) {
-	var users []User
+func (svc *UsersService) Search(opts SearchUsersOpts) (*UsersPage, error) {
+    var usersPage UsersPage
 	queryString, err := opts.Encode()
 	if err != nil {
 		return nil, err
@@ -126,8 +134,12 @@ func (svc *UsersService) Search(opts SearchUsersOpts) ([]User, error) {
 	if queryString != "" {
 		url = fmt.Sprintf("/users?%s", queryString)
 	}
-	err = svc.c.Get(url, &users)
-	return users, err
+    if opts.IncludeTotals {
+	    err = svc.c.Get(url, &usersPage)
+    } else {
+        err = svc.c.Get(url, &usersPage.Users)
+    }
+	return &usersPage, err
 }
 
 // Create creates a user
