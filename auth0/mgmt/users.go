@@ -41,7 +41,7 @@ type UsersPage struct {
     Limit  int `json:"limit,omitempty"`
     Length int `json:"length,omitempty"`
     Total int `json:"total,omitempty"`
-    Users []User `json:"user,omitempty"`
+    Users []User `json:"users,omitempty"`
 }
 
 // UserOpts are options which can be used to create a User
