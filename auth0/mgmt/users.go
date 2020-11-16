@@ -112,7 +112,7 @@ type Identity struct {
 // GetAll returns all users
 func (svc *UsersService) GetAll() ([]User, error) {
 	var users []User
-	err := svc.c.Get("/users", &users)
+	err := svc.c.GetV2("/users", &users)
 	return users, err
 }
 

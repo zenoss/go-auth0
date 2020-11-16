@@ -64,6 +64,10 @@ func cleanUpPerms(suite *AuthzTestSuite) {
 func (suite *AuthzTestSuite) TestPermsCreateGetAllDelete() {
 	t := suite.T()
 	svc := suite.authorization.Permissions
+
+	// Check if permission existed before the test and remove
+	cleanUpPerms(suite)
+
 	// Create a permission
 	permission := createPerm(suite)
 	assert.Equal(suite.T(), permName, permission.Name)

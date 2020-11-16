@@ -28,7 +28,7 @@ func (svc *DeviceCredentials) Get(userID string) ([]TokenData, error) {
 	var tokens []TokenData
 	encodedUser := &url.URL{Path: userID}
 	u := fmt.Sprintf("/device-credentials?user_id=%s&type=refresh_token", encodedUser.String())
-	err := svc.c.Get(u, &tokens)
+	err := svc.c.GetV2(u, &tokens)
 	return tokens, err
 }
 
