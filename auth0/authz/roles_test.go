@@ -65,6 +65,10 @@ func cleanUpRoles(suite *AuthzTestSuite) {
 
 func (suite *AuthzTestSuite) TestRolesCreateGetAllDelete() {
 	t := suite.T()
+
+	// Check if role existed before the test and remove
+	cleanUpRoles(suite)
+
 	svc := suite.authorization.Roles
 	// Create a role
 	role := createRole(suite)
