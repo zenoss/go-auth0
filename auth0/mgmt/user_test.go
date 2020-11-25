@@ -30,7 +30,7 @@ func getAllUsers(suite *ManagementTestSuite) []mgmt.User {
 	return users
 }
 
-func searchUsers(suite *ManagementTestSuite, searchOpts mgmt.SearchUsersOpts) []mgmt.UsersPage {
+func searchUsers(suite *ManagementTestSuite, searchOpts mgmt.SearchUsersOpts) *mgmt.UsersPage {
 	usersPage, err := suite.management.Users.Search(searchOpts)
 	assert.Nil(suite.T(), err)
 	return usersPage
@@ -60,6 +60,9 @@ func cleanUpUsers(suite *ManagementTestSuite) {
 func (suite *ManagementTestSuite) TestUsersCreateGetAllDelete() {
 	t := suite.T()
 	svc := suite.management.Users
+
+	// Check if user existed before the test and remove
+	cleanUpUsers(suite)
 
 	// Create a user
 	user := createUser(suite)

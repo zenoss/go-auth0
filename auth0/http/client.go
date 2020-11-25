@@ -3,12 +3,15 @@ package http
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/pkg/errors"
+	"golang.org/x/sync/errgroup"
 )
 
 // Doer can do http requests
@@ -108,6 +111,80 @@ func (c *Client) Get(endpoint string, respBody interface{}) error {
 	return c.GetWithHeaders(endpoint, respBody, map[string]string{})
 }
 
+// Get performs a get to the endpoint of the API v2 associated with the client
+func (c *Client) GetWithHeadersV2(endpoint string, respBody interface{}, headers map[string]string) error {
+	// Support for a previous version of auth0 api
+	fullUrl := noSlash(c.API) + endpoint
+	if !strings.HasSuffix(c.API, "v2") {
+		response, err := makeGetRequest(fullUrl, headers, c.Doer.Do)
+		if err != nil {
+			return err
+		}
+		return convertResponseData(response, respBody)
+	}
+
+	//auth0 v2 api returns max 50 elements per page
+	max := 50
+	page := 0
+	fullUrl = addPagingParams(fullUrl, page, max)
+	keyName := extractKeyFromEndpoint(endpoint)
+
+	response, err := makeGetRequest(fullUrl, headers, c.Doer.Do)
+	if err != nil {
+		return err
+	}
+
+	var results []interface{}
+
+	var total int
+	if val, ok := response.(map[string]interface{}); ok {
+		if t, ok := val["total"]; ok {
+			total = int(t.(float64))
+		}
+
+		if items, ok := val[keyName]; ok {
+			results = append(results, items.([]interface{})...)
+		}
+	}
+
+	if total <= max {
+		return convertResponseData(results, respBody)
+	}
+
+	chanLen := (total / max) + 1
+	data := make(chan interface{}, chanLen)
+	g := errgroup.Group{}
+
+	for i := max; i < total; i += max {
+		page += 1
+		fullUrl := addPagingParams(fullUrl, page, max)
+		g.Go(func() error {
+			response, err := makeGetRequest(fullUrl, headers, c.Doer.Do)
+			data <- response
+			return err
+		})
+	}
+	if err := g.Wait(); err != nil {
+		return err
+	}
+	close(data)
+
+	for d := range data {
+		if val, ok := d.(map[string]interface{}); ok {
+			if items, ok := val[keyName]; ok {
+				results = append(results, items.([]interface{})...)
+			}
+		}
+	}
+
+	return convertResponseData(results, respBody)
+}
+
+// Get performs a get to the endpoint of the API v2 associated with the client
+func (c *Client) GetV2(endpoint string, respBody interface{}) error {
+	return c.GetWithHeadersV2(endpoint, respBody, map[string]string{})
+}
+
 // Post performs a post to the endpoint of the API associated with the client
 func (c *Client) PostWithHeaders(endpoint string, body interface{}, respBody interface{}, headers map[string]string) error {
 	data, err := json.Marshal(body)
@@ -198,4 +275,58 @@ func (c *Client) DeleteWithHeaders(endpoint string, body interface{}, respBody i
 // Delete performs a delete to the endpoint of the API associated with the client
 func (c *Client) Delete(endpoint string, body interface{}, respBody interface{}) error {
 	return c.DeleteWithHeaders(endpoint, body, respBody, map[string]string{})
+}
+
+func extractKeyFromEndpoint(endpoint string) string {
+	// endpoint can be equal to "/users" or "/device-credentials?user_id=%s&type=refresh_token"
+	i := strings.Index(endpoint, "?")
+	if i == -1 {
+		i = len(endpoint)
+	}
+	li := strings.LastIndex(endpoint, "/")
+	key := endpoint[li+1 : i]
+	return strings.Replace(key, "-", "_", -1)
+}
+
+func convertResponseData(data interface{}, container interface{}) error {
+	dataJson, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(dataJson, &container)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func addPagingParams(fullUrl string, page, perPage int) string {
+	u, _ := url.Parse(fullUrl)
+	values, _ := url.ParseQuery(u.RawQuery)
+	values.Set("page", fmt.Sprintf("%d", page))
+	values.Set("per_page", fmt.Sprintf("%d", perPage))
+	values.Set("include_totals", "true")
+	u.RawQuery = values.Encode()
+
+	return u.String()
+}
+
+func makeGetRequest(fullUrl string, headers map[string]string, requester func(*http.Request, interface{}) error) (interface{}, error) {
+	req, err := http.NewRequest("GET", fullUrl, http.NoBody)
+	if err != nil {
+		return nil, errors.Wrap(err, "Cannot create request")
+	}
+
+	for key, value := range headers {
+		if len(strings.TrimSpace(key)) > 0 && len(strings.TrimSpace(value)) > 0 {
+			req.Header.Add(key, value)
+		}
+	}
+
+	var temporaryResponse interface{}
+	err = requester(req, &temporaryResponse)
+	if err != nil {
+		return nil, err
+	}
+	return temporaryResponse, nil
 }

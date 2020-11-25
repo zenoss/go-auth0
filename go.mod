@@ -12,6 +12,6 @@ require (
 	github.com/stretchr/testify v1.2.2
 	golang.org/x/net v0.0.0-20180712202826-d0887baf81f4 // indirect
 	golang.org/x/oauth2 v0.0.0-20180620175406-ef147856a6dd
-	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a // indirect
+	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a
 	google.golang.org/appengine v1.1.0 // indirect
 )

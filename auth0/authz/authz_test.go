@@ -42,6 +42,7 @@ func (s *AuthzTestSuite) SetupSuite() {
 		Audience:     []string{getFromEnv("AUTH0_AUTHORIZATION_API_AUDIENCE")},
 		ClientID:     getFromEnv("AUTH0_AUTHORIZATION_CLIENT_ID"),
 		ClientSecret: getFromEnv("AUTH0_AUTHORIZATION_CLIENT_SECRET"),
+		Scopes:       []string{"delete:permissions", "delete:roles"},
 	}
 	domain := getFromEnv("AUTH0_DOMAIN")
 	s.authorization = auth0.AuthzClientFromCredentials(domain, api)
