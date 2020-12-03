@@ -26,8 +26,12 @@ type DeviceCredentials struct {
 func (svc *DeviceCredentials) Get(userID string) ([]TokenData, error) {
 	//https://manage.auth0.com/api/device-credentials?user_id=auth0%7Ce8ey6zc9hfxppbz2h88r5yqqj&type=refresh_token
 	var tokens []TokenData
-	encodedUser := &url.URL{Path: userID}
-	u := fmt.Sprintf("/device-credentials?user_id=%s&type=refresh_token", encodedUser.String())
+
+	v := url.Values{}
+	v.Set("user_id", userID)
+	v.Add("type", "refresh_token")
+
+	u := fmt.Sprintf("/device-credentials?%s", v.Encode())
 	err := svc.c.GetV2(u, &tokens)
 	return tokens, err
 }

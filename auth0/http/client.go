@@ -127,7 +127,7 @@ func (c *Client) GetWithHeadersV2(endpoint string, respBody interface{}, headers
 	max := 50
 	page := 0
 	fullUrl = addPagingParams(fullUrl, page, max)
-	keyName := extractKeyFromEndpoint(endpoint)
+	keyName := extractKeyFromEndpoint(fullUrl)
 
 	response, err := makeGetRequest(fullUrl, headers, c.Doer.Do)
 	if err != nil {
@@ -277,14 +277,12 @@ func (c *Client) Delete(endpoint string, body interface{}, respBody interface{})
 	return c.DeleteWithHeaders(endpoint, body, respBody, map[string]string{})
 }
 
-func extractKeyFromEndpoint(endpoint string) string {
+func extractKeyFromEndpoint(fullUrl string) string {
 	// endpoint can be equal to "/users" or "/device-credentials?user_id=%s&type=refresh_token"
-	i := strings.Index(endpoint, "?")
-	if i == -1 {
-		i = len(endpoint)
-	}
-	li := strings.LastIndex(endpoint, "/")
-	key := endpoint[li+1 : i]
+	u, _ := url.Parse(fullUrl)
+	path := u.Path
+	li := strings.LastIndex(path, "/")
+	key := path[li+1 :]
 	return strings.Replace(key, "-", "_", -1)
 }
 
