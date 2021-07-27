@@ -1,5 +1,9 @@
 package http
 
+import (
+	"fmt"
+)
+
 // Error is an an http error returned from the Auth0 service
 type Error struct {
 	StatusCode int    `json:"statusCode,omitempty"`
@@ -10,7 +14,7 @@ type Error struct {
 func (e Error) Error() string {
 	msg := "auth0: "
 	if e.StatusCode != 0 {
-		msg += string(e.StatusCode) + " "
+		msg += fmt.Sprintf("%d ", e.StatusCode)
 	}
 	if e.HTTPError != "" {
 		msg += e.HTTPError + " "

@@ -3,9 +3,9 @@ module github.com/zenoss/go-auth0
 go 1.14
 
 require (
-	github.com/davecgh/go-spew v1.1.0 // indirect
 	github.com/golang/protobuf v1.1.0 // indirect
 	github.com/google/go-querystring v0.0.0-20170111101155-53e6ce116135
+	github.com/hashicorp/go-retryablehttp v0.7.0
 	github.com/pkg/errors v0.8.0
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/objx v0.1.1 // indirect

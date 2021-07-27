@@ -5,6 +5,7 @@ import (
 	"fmt"
 	gohttp "net/http"
 	"net/url"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/zenoss/go-auth0/auth0/authz"
@@ -12,6 +13,8 @@ import (
 	"github.com/zenoss/go-auth0/auth0/mgmt"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
+
+	"github.com/hashicorp/go-retryablehttp"
 )
 
 // TokenClient is a client to the token endpoint
@@ -56,6 +59,24 @@ func ClientFromCredentials(domain string, api API) *gohttp.Client {
 // MgmtClientFromCredentials follows the returns a client authorized for the given API
 func MgmtClientFromCredentials(domain string, api API) *mgmt.ManagementService {
 	ctx := context.Background()
+
+	// handle retry with auth0 rate limits
+	//   https://auth0.com/docs/policies/rate-limit-policy/management-api-endpoint-rate-limits
+	retryClient := retryablehttp.NewClient()
+	retryClient.RetryWaitMin = 5 * time.Second
+	retryClient.RetryWaitMax = 45 * time.Second
+	retryClient.CheckRetry = func(ctx context.Context, resp *gohttp.Response, err error) (bool, error) {
+		if resp.StatusCode == gohttp.StatusTooManyRequests {
+			// Retry only on 429 errors.   We could handle other intermittent problems
+			// if we used the default policy, but I wanted to focus on rate limits
+			// only at this time.
+			return true, nil
+		}
+
+		return false, err
+	}
+	ctx = context.WithValue(ctx, oauth2.HTTPClient, retryClient.StandardClient())
+
 	cfg := clientCredentialsConfig(ctx, domain, api)
 	return mgmt.New(
 		&http.Client{
