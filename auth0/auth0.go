@@ -66,6 +66,9 @@ func MgmtClientFromCredentials(domain string, api API) *mgmt.ManagementService {
 	retryClient.RetryWaitMin = 5 * time.Second
 	retryClient.RetryWaitMax = 45 * time.Second
 	retryClient.CheckRetry = func(ctx context.Context, resp *gohttp.Response, err error) (bool, error) {
+		if resp == nil {
+			return false, err
+		}
 		if resp.StatusCode == gohttp.StatusTooManyRequests {
 			// Retry only on 429 errors.   We could handle other intermittent problems
 			// if we used the default policy, but I wanted to focus on rate limits
@@ -91,6 +94,27 @@ func MgmtClientFromCredentials(domain string, api API) *mgmt.ManagementService {
 // AuthzClientFromCredentials follows the returns a client authorized for the given API
 func AuthzClientFromCredentials(domain string, api API) *authz.AuthorizationService {
 	ctx := context.Background()
+
+	// handle retry with auth0 rate limits
+	//   (unclear what the rules on the authz api, but assuming similar to management API)
+	retryClient := retryablehttp.NewClient()
+	retryClient.RetryWaitMin = 5 * time.Second
+	retryClient.RetryWaitMax = 45 * time.Second
+	retryClient.CheckRetry = func(ctx context.Context, resp *gohttp.Response, err error) (bool, error) {
+		if resp == nil {
+			return false, err
+		}
+		if resp.StatusCode == gohttp.StatusTooManyRequests {
+			// Retry only on 429 errors.   We could handle other intermittent problems
+			// if we used the default policy, but I wanted to focus on rate limits
+			// only at this time.
+			return true, nil
+		}
+
+		return false, err
+	}
+	ctx = context.WithValue(ctx, oauth2.HTTPClient, retryClient.StandardClient())
+
 	cfg := clientCredentialsConfig(ctx, domain, api)
 	return authz.New(
 		&http.Client{
