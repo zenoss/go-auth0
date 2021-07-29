@@ -66,6 +66,9 @@ func MgmtClientFromCredentials(domain string, api API) *mgmt.ManagementService {
 	retryClient.RetryWaitMin = 5 * time.Second
 	retryClient.RetryWaitMax = 45 * time.Second
 	retryClient.CheckRetry = func(ctx context.Context, resp *gohttp.Response, err error) (bool, error) {
+		if resp == nil {
+			return false, err
+		}
 		if resp.StatusCode == gohttp.StatusTooManyRequests {
 			// Retry only on 429 errors.   We could handle other intermittent problems
 			// if we used the default policy, but I wanted to focus on rate limits
