@@ -4,14 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/pkg/errors"
+	"golang.org/x/sync/errgroup"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
-
-	"github.com/pkg/errors"
-	"golang.org/x/sync/errgroup"
+	"time"
 )
 
 // Doer can do http requests
@@ -50,7 +50,9 @@ func getResponseError(resp *http.Response) error {
 		}
 	}
 	var respError Error
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 	err := readAndUnmarshal(resp.Body, &respError)
 	if err != nil {
 		return err
@@ -65,6 +67,15 @@ func (c *RootClient) Do(req *http.Request, respBody interface{}) error {
 		req.Method == "PUT" || req.Method == "PATCH") {
 		req.Header.Add("Content-Type", "application/json")
 	}
+	// get the rate limiter for this request
+	limiter := GetRequestLimiter(req)
+	reservation := limiter.Reserve()
+	defer reservation.Cancel()
+	if !reservation.OK() {
+		time.Sleep(1200 * time.Millisecond)
+	} else {
+		reservation.Delay()
+	}
 	// Perform the request
 	resp, err := c.Client.Do(req)
 	if err != nil {
@@ -77,7 +88,9 @@ func (c *RootClient) Do(req *http.Request, respBody interface{}) error {
 			return nil
 		}
 		// if we have a response body, unmarshal it
-		defer resp.Body.Close()
+		defer func() {
+			_ = resp.Body.Close()
+		}()
 		return readAndUnmarshal(resp.Body, respBody)
 	}
 	return getResponseError(resp)
@@ -155,13 +168,24 @@ func (c *Client) GetWithHeadersV2(endpoint string, respBody interface{}, headers
 	data := make(chan interface{}, chanLen)
 	g := errgroup.Group{}
 
+	// spawn a bounded number of goroutines
+	urls := make(chan string)
 	for i := max; i < total; i += max {
 		page += 1
-		fullUrl := addPagingParams(fullUrl, page, max)
+		// queue up the requests
+		urls <- addPagingParams(fullUrl, page, max)
+	}
+	close(urls)
+	for i := 0; i < 2; i++ {
 		g.Go(func() error {
-			response, err := makeGetRequest(fullUrl, headers, c.Doer.Do)
-			data <- response
-			return err
+			for fullUrl := range urls {
+				response, err := makeGetRequest(fullUrl, headers, c.Doer.Do)
+				if err != nil {
+					return err
+				}
+				data <- response
+			}
+			return nil
 		})
 	}
 	if err := g.Wait(); err != nil {
@@ -282,7 +306,7 @@ func extractKeyFromEndpoint(fullUrl string) string {
 	u, _ := url.Parse(fullUrl)
 	path := u.Path
 	li := strings.LastIndex(path, "/")
-	key := path[li+1 :]
+	key := path[li+1:]
 	return strings.Replace(key, "-", "_", -1)
 }
 
