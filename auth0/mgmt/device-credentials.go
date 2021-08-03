@@ -7,8 +7,8 @@ import (
 )
 
 type TokenDataOpts struct {
-	ID         string `json:"user_id,omitempty"`
-	TokenType  string `json:"type,omitempty"`
+	ID        string `json:"user_id,omitempty"`
+	TokenType string `json:"type,omitempty"`
 }
 
 type TokenData struct {
@@ -57,6 +57,6 @@ func (svc *DeviceCredentials) DeleteByIdentifier(userID, device string) error {
 
 // Deletes the specified token (this requires the auth0 id for the device, not the identifier)
 func (svc *DeviceCredentials) Delete(tokenid string) error {
-	endpoint := fmt.Sprintf("/device-credentials/"+tokenid)
+	endpoint := fmt.Sprintf("/device-credentials/" + tokenid)
 	return svc.c.Delete(endpoint, nil, nil)
 }
