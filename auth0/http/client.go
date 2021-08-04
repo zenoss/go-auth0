@@ -2,16 +2,17 @@ package http
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
 	"golang.org/x/sync/errgroup"
+	"golang.org/x/time/rate"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 )
 
 // Doer can do http requests
@@ -67,15 +68,7 @@ func (c *RootClient) Do(req *http.Request, respBody interface{}) error {
 		req.Method == "PUT" || req.Method == "PATCH") {
 		req.Header.Add("Content-Type", "application/json")
 	}
-	// get the rate limiter for this request
-	limiter := GetRequestLimiter(req)
-	reservation := limiter.Reserve()
-	defer reservation.Cancel()
-	if !reservation.OK() {
-		time.Sleep(1200 * time.Millisecond)
-	} else {
-		reservation.Delay()
-	}
+
 	// Perform the request
 	resp, err := c.Client.Do(req)
 	if err != nil {
@@ -176,9 +169,11 @@ func (c *Client) GetWithHeadersV2(endpoint string, respBody interface{}, headers
 		urls <- addPagingParams(fullUrl, page, max)
 	}
 	close(urls)
+	limiter := rate.NewLimiter(2, 2)
 	for i := 0; i < 2; i++ {
 		g.Go(func() error {
 			for fullUrl := range urls {
+				_ = limiter.Wait(context.TODO())
 				response, err := makeGetRequest(fullUrl, headers, c.Doer.Do)
 				if err != nil {
 					return err
