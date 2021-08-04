@@ -68,7 +68,6 @@ func (c *RootClient) Do(req *http.Request, respBody interface{}) error {
 		req.Method == "PUT" || req.Method == "PATCH") {
 		req.Header.Add("Content-Type", "application/json")
 	}
-
 	// Perform the request
 	resp, err := c.Client.Do(req)
 	if err != nil {
