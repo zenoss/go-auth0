@@ -161,7 +161,7 @@ func (c *Client) GetWithHeadersV2(endpoint string, respBody interface{}, headers
 	g := errgroup.Group{}
 
 	// spawn a bounded number of goroutines
-	urls := make(chan string)
+	urls := make(chan string, chanLen)
 	for i := max; i < total; i += max {
 		page += 1
 		// queue up the requests
