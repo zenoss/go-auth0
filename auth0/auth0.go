@@ -15,6 +15,8 @@ import (
 	"golang.org/x/oauth2/clientcredentials"
 
 	"github.com/hashicorp/go-retryablehttp"
+
+	"github.com/zenoss/zenkit/v5"
 )
 
 // TokenClient is a client to the token endpoint
@@ -65,6 +67,8 @@ func MgmtClientFromCredentials(domain string, api API) *mgmt.ManagementService {
 	retryClient := retryablehttp.NewClient()
 	retryClient.RetryWaitMin = 5 * time.Second
 	retryClient.RetryWaitMax = 45 * time.Second
+	retryClient.Logger = zenkit.Logger("go-auth0")
+
 	retryClient.CheckRetry = func(ctx context.Context, resp *gohttp.Response, err error) (bool, error) {
 		if resp == nil {
 			return false, err
@@ -100,6 +104,7 @@ func AuthzClientFromCredentials(domain string, api API) *authz.AuthorizationServ
 	retryClient := retryablehttp.NewClient()
 	retryClient.RetryWaitMin = 5 * time.Second
 	retryClient.RetryWaitMax = 45 * time.Second
+	retryClient.Logger = zenkit.Logger("go-auth0")
 	retryClient.CheckRetry = func(ctx context.Context, resp *gohttp.Response, err error) (bool, error) {
 		if resp == nil {
 			return false, err
