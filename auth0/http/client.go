@@ -128,8 +128,8 @@ func (c *Client) GetWithHeadersV2(endpoint string, respBody interface{}, headers
 		return convertResponseData(response, respBody)
 	}
 
-	//auth0 v2 api returns max 50 elements per page
-	max := 50
+	//auth0 v2 api returns max 100 elements per page
+	max := 100
 	page := 0
 	fullUrl = addPagingParams(fullUrl, page, max)
 	keyName := extractKeyFromEndpoint(fullUrl)
