@@ -37,14 +37,18 @@ func (svc *DeviceCredentials) Get(userID string) ([]TokenData, error) {
 }
 
 // Deletes all tokens for the user with a matching device identifier.
-func (svc *DeviceCredentials) DeleteByIdentifier(userID, device string) error {
-	tokens, err := svc.Get(userID)
-	if err != nil {
-		return err
-	}
+func (svc *DeviceCredentials) DeleteByIdentifierInTokens(userID, device string, tokens []TokenData) error {
+	seenTokenId := map[string]bool{}
 	for _, token := range tokens {
+		if _, seen := seenTokenId[token.ID]; seen {
+			// Ignore this duplicate token ID, most likely due to an auth0
+			// bug we reported in https://support.auth0.com/tickets/00496600
+			continue
+		}
+		seenTokenId[token.ID] = true
+
 		if token.DeviceName == device {
-			err = svc.Delete(token.ID)
+			err := svc.Delete(token.ID)
 			if err != nil {
 				// abort the loop; some tokens may be left intact in auth0. errors are typically a problem
 				// with the call/scopes, so generally if one of these succeeds, they will all succeed.
@@ -53,6 +57,16 @@ func (svc *DeviceCredentials) DeleteByIdentifier(userID, device string) error {
 		}
 	}
 	return nil
+}
+
+// Deletes all tokens for the user with a matching device identifier.
+func (svc *DeviceCredentials) DeleteByIdentifier(userID, device string) error {
+	tokens, err := svc.Get(userID)
+	if err != nil {
+		return err
+	}
+
+	return svc.DeleteByIdentifierInTokens(userID, device, tokens)
 }
 
 // Deletes the specified token (this requires the auth0 id for the device, not the identifier)
