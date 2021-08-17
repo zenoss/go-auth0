@@ -74,3 +74,12 @@ func (svc *DeviceCredentials) Delete(tokenid string) error {
 	endpoint := fmt.Sprintf("/device-credentials/" + tokenid)
 	return svc.c.Delete(endpoint, nil, nil)
 }
+
+// Deletes all grants for a user, which removes their refresh tokens across all devices.
+func (svc *DeviceCredentials) DeleteGrants(userID string) error {
+	v := url.Values{}
+	v.Set("user_id", userID)
+	endpoint := fmt.Sprintf("/grants?%s" + v.Encode())
+
+	return svc.c.Delete(endpoint, nil, nil)
+}
