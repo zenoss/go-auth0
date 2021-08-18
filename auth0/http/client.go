@@ -203,6 +203,35 @@ func (c *Client) GetV2(endpoint string, respBody interface{}) error {
 	return c.GetWithHeadersV2(endpoint, respBody, map[string]string{})
 }
 
+// Get performs a get to the endpoint of the API v2 associated with the client,
+// only for the summary, and returns the record count.
+func (c *Client) CountWithHeadersV2(endpoint string, headers map[string]string) (int, error) {
+	fullUrl := noSlash(c.API) + endpoint
+	fullUrl = addPagingParams(fullUrl, 0, 1)
+
+	response, err := makeGetRequest(fullUrl, headers, c.Doer.Do)
+	if err != nil {
+		return 0, err
+	}
+	if val, ok := response.(map[string]interface{}); ok {
+		if t, ok := val["total"]; ok {
+			return int(t.(float64)), nil
+		} else {
+			return 0, fmt.Errorf("No total record count returned by GET %s query", fullUrl)
+		}
+	} else {
+		return 0, fmt.Errorf("Unable to process response to GET %s query", fullUrl)
+	}
+
+	return 0, nil
+}
+
+// Get performs a get to the endpoint of the API v2 associated with the client,
+// but returns the number of records rather than the actual data.
+func (c *Client) CountV2(endpoint string) (int, error) {
+	return c.CountWithHeadersV2(endpoint, map[string]string{})
+}
+
 // Post performs a post to the endpoint of the API associated with the client
 func (c *Client) PostWithHeaders(endpoint string, body interface{}, respBody interface{}, headers map[string]string) error {
 	data, err := json.Marshal(body)

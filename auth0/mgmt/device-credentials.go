@@ -30,10 +30,21 @@ func (svc *DeviceCredentials) Get(userID string) ([]TokenData, error) {
 	v := url.Values{}
 	v.Set("user_id", userID)
 	v.Add("type", "refresh_token")
-
 	u := fmt.Sprintf("/device-credentials?%s", v.Encode())
 	err := svc.c.GetV2(u, &tokens)
 	return tokens, err
+}
+
+// Count refresh tokens
+func (svc *DeviceCredentials) Count(userID string) (int, error) {
+	//https://manage.auth0.com/api/device-credentials?user_id=auth0%7Ce8ey6zc9hfxppbz2h88r5yqqj&type=refresh_token
+
+	v := url.Values{}
+	v.Set("user_id", userID)
+	v.Add("type", "refresh_token")
+	u := fmt.Sprintf("/device-credentials?%s", v.Encode())
+	count, err := svc.c.CountV2(u)
+	return count, err
 }
 
 // Deletes all tokens for the user with a matching device identifier.
@@ -79,7 +90,7 @@ func (svc *DeviceCredentials) Delete(tokenid string) error {
 func (svc *DeviceCredentials) DeleteGrants(userID string) error {
 	v := url.Values{}
 	v.Set("user_id", userID)
-	endpoint := fmt.Sprintf("/grants?%s" + v.Encode())
+	endpoint := fmt.Sprintf("/grants?%s", v.Encode())
 
 	return svc.c.Delete(endpoint, nil, nil)
 }
