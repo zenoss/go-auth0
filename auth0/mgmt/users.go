@@ -81,6 +81,7 @@ type UserUpdateOpts struct {
 	ClientID          string                 `json:"client_id,omitempty"`
 	FamilyName        string                 `json:"family_name,omitempty"`
 	GivenName         string                 `json:"given_name,omitempty"`
+	Name              string                 `json:"name,omitempty"`
 }
 
 // SearchUsersOpts are options which can be used to used to search users
