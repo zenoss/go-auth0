@@ -28,9 +28,9 @@ func (svc *PermissionsService) GetAll() ([]Permission, error) {
 }
 
 // Get returns a permissions
-func (svc *PermissionsService) Get(ID string) (Permission, error) {
+func (svc *PermissionsService) Get(id string) (Permission, error) {
 	var perm Permission
-	err := svc.c.Get("/permissions/"+ID, &perm)
+	err := svc.c.Get("/permissions/"+id, &perm)
 	return perm, err
 }
 
@@ -43,8 +43,8 @@ func (svc *PermissionsService) Create(perm Permission) (Permission, error) {
 }
 
 // Delete deletes a permissions
-func (svc *PermissionsService) Delete(ID string) error {
-	return svc.c.Delete("/permissions/"+ID, nil, nil)
+func (svc *PermissionsService) Delete(id string) error {
+	return svc.c.Delete("/permissions/"+id, nil, nil)
 }
 
 // Update creates a permission

@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package authz_test
@@ -13,9 +14,7 @@ const (
 	permAppType = "client"
 )
 
-var (
-	permAppID = getFromEnv("AUTH0_AUTHORIZATION_CLIENT_ID")
-)
+var permAppID = getFromEnv("AUTH0_AUTHORIZATION_CLIENT_ID")
 
 func createPerm(suite *AuthzTestSuite) authz.Permission {
 	perm, err := suite.authorization.Permissions.Create(authz.Permission{

@@ -1,7 +1,6 @@
 package mgmt
 
 import (
-	"fmt"
 	"github.com/google/go-querystring/query"
 	"github.com/zenoss/go-auth0/auth0/http"
 )
@@ -13,35 +12,35 @@ type ConnectionsService struct {
 
 // Connection is a connection in Auth0
 type Connection struct {
-	Name               string                 `json:"name,omitempty"`
-	DisplayName        string                 `json:"display_name,omitempty"`
-	Options            map[string]interface{} `json:"options,omitempty"`
-	ID                 string                 `json:"id,omitempty"`
-	Strategy           string                 `json:"strategy,omitempty"`
-	Realms             []string               `json:"realms,omitempty"`
-	EnabledClients     []string               `json:"enabled_clients,omitempty"`
-	IsDomainConnection bool                   `json:"is_domain_connection,omitempty"`
-	Metadata           map[string]interface{} `json:"metadata,omitempty"`
+	Name               string         `json:"name,omitempty"`
+	DisplayName        string         `json:"display_name,omitempty"`
+	Options            map[string]any `json:"options,omitempty"`
+	ID                 string         `json:"id,omitempty"`
+	Strategy           string         `json:"strategy,omitempty"`
+	Realms             []string       `json:"realms,omitempty"`
+	EnabledClients     []string       `json:"enabled_clients,omitempty"`
+	IsDomainConnection bool           `json:"is_domain_connection,omitempty"`
+	Metadata           map[string]any `json:"metadata,omitempty"`
 }
 
 type ConnectionOpts struct {
-	Name               string                 `json:"name,omitempty"`
-	DisplayName        string                 `json:"display_name,omitempty"`
-	Strategy           string                 `json:"strategy,omitempty"`
-	Options            map[string]interface{} `json:"options,omitempty"`
-	EnabledClients     []string               `json:"enabled_clients,omitempty"`
-	IsDomainConnection bool                   `json:"is_domain_connection,omitempty"`
-	Realms             []string               `json:"realms,omitempty"`
-	Metadata           map[string]interface{} `json:"metadata,omitempty"`
+	Name               string         `json:"name,omitempty"`
+	DisplayName        string         `json:"display_name,omitempty"`
+	Strategy           string         `json:"strategy,omitempty"`
+	Options            map[string]any `json:"options,omitempty"`
+	EnabledClients     []string       `json:"enabled_clients,omitempty"`
+	IsDomainConnection bool           `json:"is_domain_connection,omitempty"`
+	Realms             []string       `json:"realms,omitempty"`
+	Metadata           map[string]any `json:"metadata,omitempty"`
 }
 
 type ConnectionUpdateOpts struct {
-	DisplayName        string                 `json:"display_name,omitempty"`
-	Options            map[string]interface{} `json:"options,omitempty"`
-	EnabledClients     []string               `json:"enabled_clients,omitempty"`
-	IsDomainConnection bool                   `json:"is_domain_connection,omitempty"`
-	Realms             []string               `json:"realms,omitempty"`
-	Metadata           map[string]interface{} `json:"metadata,omitempty"`
+	DisplayName        string         `json:"display_name,omitempty"`
+	Options            map[string]any `json:"options,omitempty"`
+	EnabledClients     []string       `json:"enabled_clients,omitempty"`
+	IsDomainConnection bool           `json:"is_domain_connection,omitempty"`
+	Realms             []string       `json:"realms,omitempty"`
+	Metadata           map[string]any `json:"metadata,omitempty"`
 }
 type ConnectionsPage struct {
 	Start       int          `json:"start,omitempty"`
@@ -94,7 +93,7 @@ func (svc *ConnectionsService) Search(opts SearchConnectionsOpts) (*ConnectionsP
 	}
 	url := "/connections"
 	if queryString != "" {
-		url = fmt.Sprintf("/connections?%s", queryString)
+		url = "/connections?" + queryString
 	}
 	if opts.IncludeTotals {
 		err = svc.c.Get(url, &connectionsPage)
@@ -116,7 +115,7 @@ func (svc *ConnectionsService) Delete(connectionID string) error {
 	return svc.c.Delete("/connections/"+connectionID, nil, nil)
 }
 
-func (svc *ConnectionsService) DeleteWithBody(connectionID string, body interface{}) error {
+func (svc *ConnectionsService) DeleteWithBody(connectionID string, body any) error {
 	return svc.c.Delete("/connections/"+connectionID, &body, nil)
 }
 

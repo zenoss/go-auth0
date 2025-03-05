@@ -1,7 +1,8 @@
 package auth0
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
+
 	"github.com/zenoss/go-auth0/auth0/http"
 )
 
@@ -50,7 +51,7 @@ func (svc *TokenService) GetToken(body TokenRequestBody) (*TokenResponseBody, er
 	}
 	err := svc.PostWithHeaders("/oauth/token", body, &resBody, headers)
 	if err != nil {
-		return nil, errors.Wrap(err, "Cannot complete token request")
+		return nil, fmt.Errorf("Cannot complete token request: %w", err)
 	}
 	return &resBody, nil
 }

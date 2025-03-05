@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package authz_test
@@ -13,9 +14,7 @@ const (
 	roleAppType = "client"
 )
 
-var (
-	roleAppID = getFromEnv("AUTH0_AUTHORIZATION_CLIENT_ID")
-)
+var roleAppID = getFromEnv("AUTH0_AUTHORIZATION_CLIENT_ID")
 
 var rolePerms = []authz.Permission{}
 

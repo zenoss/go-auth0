@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/zenoss/go-auth0/auth0/authz"
 	"github.com/zenoss/go-auth0/auth0/http"
 	"github.com/zenoss/go-auth0/auth0/mgmt"
@@ -26,7 +25,7 @@ func TokenClient(domain string) *TokenService {
 			Doer: &http.RootClient{
 				Client: &gohttp.Client{},
 			},
-			API: fmt.Sprintf("https://%s", domain),
+			API: "https://" + domain,
 		},
 	}
 }
@@ -40,7 +39,7 @@ type API struct {
 	Scopes       []string
 }
 
-func clientCredentialsConfig(ctx context.Context, domain string, api API) *clientcredentials.Config {
+func clientCredentialsConfig(_ context.Context, domain string, api API) *clientcredentials.Config {
 	return &clientcredentials.Config{
 		ClientID:     api.ClientID,
 		ClientSecret: api.ClientSecret,
@@ -69,7 +68,7 @@ func MgmtClientFromCredentials(domain string, api API) *mgmt.ManagementService {
 	retryClient.RetryWaitMax = 45 * time.Second
 	retryClient.Logger = zenkit.Logger("go-auth0")
 
-	retryClient.CheckRetry = func(ctx context.Context, resp *gohttp.Response, err error) (bool, error) {
+	retryClient.CheckRetry = func(_ context.Context, resp *gohttp.Response, err error) (bool, error) {
 		if resp == nil {
 			return false, err
 		}
@@ -105,7 +104,7 @@ func AuthzClientFromCredentials(domain string, api API) *authz.AuthorizationServ
 	retryClient.RetryWaitMin = 5 * time.Second
 	retryClient.RetryWaitMax = 45 * time.Second
 	retryClient.Logger = zenkit.Logger("go-auth0")
-	retryClient.CheckRetry = func(ctx context.Context, resp *gohttp.Response, err error) (bool, error) {
+	retryClient.CheckRetry = func(_ context.Context, resp *gohttp.Response, err error) (bool, error) {
 		if resp == nil {
 			return false, err
 		}
@@ -132,20 +131,20 @@ func AuthzClientFromCredentials(domain string, api API) *authz.AuthorizationServ
 }
 
 // GrantFunc is a function that gets an Authorization Grant code
-type GrantFunc func(URL string) (string, error)
+type GrantFunc func(url string) (string, error)
 
 // PromptGrant uses stdin/out to get an authorization grant
-func PromptGrant(URL string) (string, error) {
-	fmt.Printf("Visit the URL for the auth dialog, then enter the code: %v\n", URL)
+func PromptGrant(url string) (string, error) {
+	fmt.Printf("Visit the URL for the auth dialog, then enter the code: %v\n", url)
 	var code string
 	if _, err := fmt.Scan(&code); err != nil {
-		return "", errors.Wrap(err, "Unable to get code from input")
+		return "", fmt.Errorf("Unable to get code from input: %w", err)
 	}
 
 	return code, nil
 }
 
-func grantConfig(ctx context.Context, domain string, api API) *oauth2.Config {
+func grantConfig(_ context.Context, domain string, api API) *oauth2.Config {
 	return &oauth2.Config{
 		ClientID:     api.ClientID,
 		ClientSecret: api.ClientSecret,
@@ -161,14 +160,14 @@ func grantConfig(ctx context.Context, domain string, api API) *oauth2.Config {
 func ClientFromGrant(domain string, api API, getGrant GrantFunc) (*gohttp.Client, error) {
 	ctx := context.Background()
 	cfg := grantConfig(ctx, domain, api)
-	URL := cfg.AuthCodeURL("state", oauth2.AccessTypeOffline)
-	code, err := getGrant(URL)
+	url := cfg.AuthCodeURL("state", oauth2.AccessTypeOffline)
+	code, err := getGrant(url)
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to get authorization grant")
+		return nil, fmt.Errorf("Failed to get authorization grant: %w", err)
 	}
 	token, err := cfg.Exchange(ctx, code)
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to exchange authorization grant for token")
+		return nil, fmt.Errorf("Failed to exchange authorization grant for token: %w", err)
 	}
 	return cfg.Client(ctx, token), nil
 }
@@ -177,14 +176,14 @@ func ClientFromGrant(domain string, api API, getGrant GrantFunc) (*gohttp.Client
 func MgmtClientFromGrant(domain string, api API, getGrant GrantFunc) (*mgmt.ManagementService, error) {
 	ctx := context.Background()
 	cfg := grantConfig(ctx, domain, api)
-	URL := cfg.AuthCodeURL("state", oauth2.AccessTypeOffline)
-	code, err := getGrant(URL)
+	url := cfg.AuthCodeURL("state", oauth2.AccessTypeOffline)
+	code, err := getGrant(url)
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to get authorization grant")
+		return nil, fmt.Errorf("Failed to get authorization grant: %w", err)
 	}
 	token, err := cfg.Exchange(ctx, code)
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to exchange authorization grant for token")
+		return nil, fmt.Errorf("Failed to exchange authorization grant for token: %w", err)
 	}
 	return mgmt.New(
 		&http.Client{
@@ -200,14 +199,14 @@ func MgmtClientFromGrant(domain string, api API, getGrant GrantFunc) (*mgmt.Mana
 func AuthzClientFromGrant(domain string, api API, getGrant GrantFunc) (*authz.AuthorizationService, error) {
 	ctx := context.Background()
 	cfg := grantConfig(ctx, domain, api)
-	URL := cfg.AuthCodeURL("state", oauth2.AccessTypeOffline)
-	code, err := getGrant(URL)
+	url := cfg.AuthCodeURL("state", oauth2.AccessTypeOffline)
+	code, err := getGrant(url)
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to get authorization grant")
+		return nil, fmt.Errorf("Failed to get authorization grant: %w", err)
 	}
 	token, err := cfg.Exchange(ctx, code)
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to exchange authorization grant for token")
+		return nil, fmt.Errorf("Failed to exchange authorization grant for token: %w", err)
 	}
 	return authz.New(
 		&http.Client{
