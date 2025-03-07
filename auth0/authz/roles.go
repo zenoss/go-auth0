@@ -29,9 +29,9 @@ func (svc *RolesService) GetAll() ([]Role, error) {
 }
 
 // Get returns a roles
-func (svc *RolesService) Get(ID string) (Role, error) {
+func (svc *RolesService) Get(id string) (Role, error) {
 	var r Role
-	err := svc.c.Get("/roles/"+ID, &r)
+	err := svc.c.Get("/roles/"+id, &r)
 	return r, err
 }
 
@@ -44,8 +44,8 @@ func (svc *RolesService) Create(r Role) (Role, error) {
 }
 
 // Delete deletes a roles
-func (svc *RolesService) Delete(ID string) error {
-	return svc.c.Delete("/roles/"+ID, nil, nil)
+func (svc *RolesService) Delete(id string) error {
+	return svc.c.Delete("/roles/"+id, nil, nil)
 }
 
 // Update creates a role

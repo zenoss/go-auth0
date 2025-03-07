@@ -1,7 +1,8 @@
 package authz
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
+
 	"github.com/zenoss/go-auth0/auth0/http"
 )
 
@@ -115,7 +116,7 @@ func (svc *GroupsService) AddMembers(groupID string, members []string) ([]string
 // DeleteMembers deletes one or more members from a group
 func (svc *GroupsService) DeleteMembers(groupID string, members []string) error {
 	err := svc.c.Delete("/groups/"+groupID+"/members", members, nil)
-	return errors.Wrap(err, "go-auth0: cannot delete member from group")
+	return fmt.Errorf("go-auth0: cannot delete members from group: %w", err)
 }
 
 // GetNestedMembers gets members in nested groups

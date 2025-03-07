@@ -5,19 +5,19 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
-	"golang.org/x/sync/errgroup"
-	"golang.org/x/time/rate"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
+
+	"golang.org/x/sync/errgroup"
+	"golang.org/x/time/rate"
 )
 
 // Doer can do http requests
 type Doer interface {
-	Do(*http.Request, interface{}) error
+	Do(*http.Request, any) error
 }
 
 // Client handles requests to API
@@ -31,14 +31,14 @@ type RootClient struct {
 	*http.Client
 }
 
-func readAndUnmarshal(r io.Reader, obj interface{}) error {
-	data, err := ioutil.ReadAll(r)
+func readAndUnmarshal(r io.Reader, obj any) error {
+	data, err := io.ReadAll(r)
 	if err != nil {
-		return errors.Wrap(err, "Cannot read response body")
+		return fmt.Errorf("Cannot read response body: %w", err)
 	}
 	err = json.Unmarshal(data, obj)
 	if err != nil {
-		return errors.Wrap(err, "Cannot unmarshal response")
+		return fmt.Errorf("Cannot unmarshal response: %w", err)
 	}
 	return nil
 }
@@ -62,7 +62,7 @@ func getResponseError(resp *http.Response) error {
 }
 
 // Do processes a request and unmarshals the response body into respBody
-func (c *RootClient) Do(req *http.Request, respBody interface{}) error {
+func (c *RootClient) Do(req *http.Request, respBody any) error {
 	// POSTs are application/json to this api
 	if req.ContentLength > 0 && (req.Method == "POST" ||
 		req.Method == "PUT" || req.Method == "PATCH") {
@@ -71,7 +71,7 @@ func (c *RootClient) Do(req *http.Request, respBody interface{}) error {
 	// Perform the request
 	resp, err := c.Client.Do(req)
 	if err != nil {
-		return errors.Wrap(err, "Cannot complete request")
+		return fmt.Errorf("Cannot complete request: %w", err)
 	}
 
 	if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
@@ -89,7 +89,7 @@ func (c *RootClient) Do(req *http.Request, respBody interface{}) error {
 }
 
 // Do processes a request and unmarshals the response body into respBody
-func (c *Client) Do(req *http.Request, respBody interface{}) error {
+func (c *Client) Do(req *http.Request, respBody any) error {
 	return c.Doer.Do(req, respBody)
 }
 
@@ -98,10 +98,10 @@ func noSlash(uri string) string {
 }
 
 // Get performs a get to the endpoint of the API associated with the client
-func (c *Client) GetWithHeaders(endpoint string, respBody interface{}, headers map[string]string) error {
+func (c *Client) GetWithHeaders(endpoint string, respBody any, headers map[string]string) error {
 	req, err := http.NewRequest("GET", noSlash(c.API)+endpoint, http.NoBody)
 	if err != nil {
-		return errors.Wrap(err, "Cannot create request")
+		return fmt.Errorf("Cannot create request: %w", err)
 	}
 	for key, value := range headers {
 		if len(strings.TrimSpace(key)) > 0 && len(strings.TrimSpace(value)) > 0 {
@@ -112,12 +112,14 @@ func (c *Client) GetWithHeaders(endpoint string, respBody interface{}, headers m
 }
 
 // Get performs a get to the endpoint of the API associated with the client
-func (c *Client) Get(endpoint string, respBody interface{}) error {
+func (c *Client) Get(endpoint string, respBody any) error {
 	return c.GetWithHeaders(endpoint, respBody, map[string]string{})
 }
 
 // Get performs a get to the endpoint of the API v2 associated with the client
-func (c *Client) GetWithHeadersV2(endpoint string, respBody interface{}, headers map[string]string) error {
+//
+//revive:disable:cognitive-complexity
+func (c *Client) GetWithHeadersV2(endpoint string, respBody any, headers map[string]string) error {
 	// Support for a previous version of auth0 api
 	fullUrl := noSlash(c.API) + endpoint
 	if !strings.HasSuffix(c.API, "v2") {
@@ -128,10 +130,10 @@ func (c *Client) GetWithHeadersV2(endpoint string, respBody interface{}, headers
 		return convertResponseData(response, respBody)
 	}
 
-	//auth0 v2 api returns max 100 elements per page
-	max := 100
+	// auth0 v2 api returns maxPage 100 elements per page
+	maxPage := 100
 	page := 0
-	fullUrl = addPagingParams(fullUrl, page, max)
+	fullUrl = addPagingParams(fullUrl, page, maxPage)
 	keyName := extractKeyFromEndpoint(fullUrl)
 
 	response, err := makeGetRequest(fullUrl, headers, c.Doer.Do)
@@ -139,37 +141,37 @@ func (c *Client) GetWithHeadersV2(endpoint string, respBody interface{}, headers
 		return err
 	}
 
-	var results []interface{}
+	var results []any
 
 	var total int
-	if val, ok := response.(map[string]interface{}); ok {
+	if val, ok := response.(map[string]any); ok {
 		if t, ok := val["total"]; ok {
 			total = int(t.(float64))
 		}
 
 		if items, ok := val[keyName]; ok {
-			results = append(results, items.([]interface{})...)
+			results = append(results, items.([]any)...)
 		}
 	}
 
-	if total <= max {
+	if total <= maxPage {
 		return convertResponseData(results, respBody)
 	}
 
-	chanLen := (total / max) + 1
-	data := make(chan interface{}, chanLen)
+	chanLen := (total / maxPage) + 1
+	data := make(chan any, chanLen)
 	g := errgroup.Group{}
 
 	// spawn a bounded number of goroutines
 	urls := make(chan string, chanLen)
-	for i := max; i < total; i += max {
+	for i := maxPage; i < total; i += maxPage {
 		page += 1
 		// queue up the requests
-		urls <- addPagingParams(fullUrl, page, max)
+		urls <- addPagingParams(fullUrl, page, maxPage)
 	}
 	close(urls)
 	limiter := rate.NewLimiter(2, 2)
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		g.Go(func() error {
 			for fullUrl := range urls {
 				_ = limiter.Wait(context.TODO())
@@ -188,9 +190,9 @@ func (c *Client) GetWithHeadersV2(endpoint string, respBody interface{}, headers
 	close(data)
 
 	for d := range data {
-		if val, ok := d.(map[string]interface{}); ok {
+		if val, ok := d.(map[string]any); ok {
 			if items, ok := val[keyName]; ok {
-				results = append(results, items.([]interface{})...)
+				results = append(results, items.([]any)...)
 			}
 		}
 	}
@@ -198,8 +200,10 @@ func (c *Client) GetWithHeadersV2(endpoint string, respBody interface{}, headers
 	return convertResponseData(results, respBody)
 }
 
+//revive:enable:cognitive-complexity
+
 // Get performs a get to the endpoint of the API v2 associated with the client
-func (c *Client) GetV2(endpoint string, respBody interface{}) error {
+func (c *Client) GetV2(endpoint string, respBody any) error {
 	return c.GetWithHeadersV2(endpoint, respBody, map[string]string{})
 }
 
@@ -213,17 +217,13 @@ func (c *Client) CountWithHeadersV2(endpoint string, headers map[string]string) 
 	if err != nil {
 		return 0, err
 	}
-	if val, ok := response.(map[string]interface{}); ok {
+	if val, ok := response.(map[string]any); ok {
 		if t, ok := val["total"]; ok {
 			return int(t.(float64)), nil
-		} else {
-			return 0, fmt.Errorf("No total record count returned by GET %s query", fullUrl)
 		}
-	} else {
-		return 0, fmt.Errorf("Unable to process response to GET %s query", fullUrl)
+		return 0, fmt.Errorf("No total record count returned by GET %s query", fullUrl)
 	}
-
-	return 0, nil
+	return 0, fmt.Errorf("Unable to process response to GET %s query", fullUrl)
 }
 
 // Get performs a get to the endpoint of the API v2 associated with the client,
@@ -233,14 +233,14 @@ func (c *Client) CountV2(endpoint string) (int, error) {
 }
 
 // Post performs a post to the endpoint of the API associated with the client
-func (c *Client) PostWithHeaders(endpoint string, body interface{}, respBody interface{}, headers map[string]string) error {
+func (c *Client) PostWithHeaders(endpoint string, body any, respBody any, headers map[string]string) error {
 	data, err := json.Marshal(body)
 	if err != nil {
-		return errors.Wrap(err, "Cannot marshal body")
+		return fmt.Errorf("Cannot marshal body: %w", err)
 	}
 	req, err := http.NewRequest("POST", noSlash(c.API)+endpoint, bytes.NewBuffer(data))
 	if err != nil {
-		return errors.Wrap(err, "Cannot create request")
+		return fmt.Errorf("Cannot create request: %w", err)
 	}
 	for key, value := range headers {
 		if len(strings.TrimSpace(key)) > 0 && len(strings.TrimSpace(value)) > 0 {
@@ -251,19 +251,19 @@ func (c *Client) PostWithHeaders(endpoint string, body interface{}, respBody int
 }
 
 // Post performs a post to the endpoint of the API associated with the client
-func (c *Client) Post(endpoint string, body interface{}, respBody interface{}) error {
+func (c *Client) Post(endpoint string, body any, respBody any) error {
 	return c.PostWithHeaders(endpoint, body, respBody, map[string]string{})
 }
 
 // Put performs a put to the endpoint of the API associated with the client
-func (c *Client) PutWithHeaders(endpoint string, body interface{}, respBody interface{}, headers map[string]string) error {
+func (c *Client) PutWithHeaders(endpoint string, body any, respBody any, headers map[string]string) error {
 	data, err := json.Marshal(body)
 	if err != nil {
-		return errors.Wrap(err, "Cannot marshal body")
+		return fmt.Errorf("Cannot marshal body: %w", err)
 	}
 	req, err := http.NewRequest("PUT", noSlash(c.API)+endpoint, bytes.NewBuffer(data))
 	if err != nil {
-		return errors.Wrap(err, "Cannot create request")
+		return fmt.Errorf("Cannot create request: %w", err)
 	}
 	for key, value := range headers {
 		if len(strings.TrimSpace(key)) > 0 && len(strings.TrimSpace(value)) > 0 {
@@ -274,19 +274,19 @@ func (c *Client) PutWithHeaders(endpoint string, body interface{}, respBody inte
 }
 
 // Put performs a put to the endpoint of the API associated with the client
-func (c *Client) Put(endpoint string, body interface{}, respBody interface{}) error {
+func (c *Client) Put(endpoint string, body any, respBody any) error {
 	return c.PutWithHeaders(endpoint, body, respBody, map[string]string{})
 }
 
 // Patch performs a patch to the endpoint of the API associated with the client
-func (c *Client) PatchWithHeaders(endpoint string, body interface{}, respBody interface{}, headers map[string]string) error {
+func (c *Client) PatchWithHeaders(endpoint string, body any, respBody any, headers map[string]string) error {
 	data, err := json.Marshal(body)
 	if err != nil {
-		return errors.Wrap(err, "Cannot marshal body")
+		return fmt.Errorf("Cannot marshal body: %w", err)
 	}
 	req, err := http.NewRequest("PATCH", noSlash(c.API)+endpoint, bytes.NewBuffer(data))
 	if err != nil {
-		return errors.Wrap(err, "Cannot create request")
+		return fmt.Errorf("Cannot create request: %w", err)
 	}
 	for key, value := range headers {
 		if len(strings.TrimSpace(key)) > 0 && len(strings.TrimSpace(value)) > 0 {
@@ -297,19 +297,19 @@ func (c *Client) PatchWithHeaders(endpoint string, body interface{}, respBody in
 }
 
 // Patch performs a patch to the endpoint of the API associated with the client
-func (c *Client) Patch(endpoint string, body interface{}, respBody interface{}) error {
+func (c *Client) Patch(endpoint string, body any, respBody any) error {
 	return c.PatchWithHeaders(endpoint, body, respBody, map[string]string{})
 }
 
 // Delete performs a delete to the endpoint of the API associated with the client
-func (c *Client) DeleteWithHeaders(endpoint string, body interface{}, respBody interface{}, headers map[string]string) error {
+func (c *Client) DeleteWithHeaders(endpoint string, body any, respBody any, headers map[string]string) error {
 	data, err := json.Marshal(body)
 	if err != nil {
-		return errors.Wrap(err, "Cannot marshal body")
+		return fmt.Errorf("Cannot marshal body: %w", err)
 	}
 	req, err := http.NewRequest("DELETE", noSlash(c.API)+endpoint, bytes.NewBuffer(data))
 	if err != nil {
-		return errors.Wrap(err, "Cannot create request")
+		return fmt.Errorf("Cannot create request: %w", err)
 	}
 	for key, value := range headers {
 		if len(strings.TrimSpace(key)) > 0 && len(strings.TrimSpace(value)) > 0 {
@@ -320,7 +320,7 @@ func (c *Client) DeleteWithHeaders(endpoint string, body interface{}, respBody i
 }
 
 // Delete performs a delete to the endpoint of the API associated with the client
-func (c *Client) Delete(endpoint string, body interface{}, respBody interface{}) error {
+func (c *Client) Delete(endpoint string, body any, respBody any) error {
 	return c.DeleteWithHeaders(endpoint, body, respBody, map[string]string{})
 }
 
@@ -330,10 +330,10 @@ func extractKeyFromEndpoint(fullUrl string) string {
 	path := u.Path
 	li := strings.LastIndex(path, "/")
 	key := path[li+1:]
-	return strings.Replace(key, "-", "_", -1)
+	return strings.ReplaceAll(key, "-", "_")
 }
 
-func convertResponseData(data interface{}, container interface{}) error {
+func convertResponseData(data any, container any) error {
 	dataJson, err := json.Marshal(data)
 	if err != nil {
 		return err
@@ -348,18 +348,18 @@ func convertResponseData(data interface{}, container interface{}) error {
 func addPagingParams(fullUrl string, page, perPage int) string {
 	u, _ := url.Parse(fullUrl)
 	values, _ := url.ParseQuery(u.RawQuery)
-	values.Set("page", fmt.Sprintf("%d", page))
-	values.Set("per_page", fmt.Sprintf("%d", perPage))
+	values.Set("page", strconv.Itoa(page))
+	values.Set("per_page", strconv.Itoa(perPage))
 	values.Set("include_totals", "true")
 	u.RawQuery = values.Encode()
 
 	return u.String()
 }
 
-func makeGetRequest(fullUrl string, headers map[string]string, requester func(*http.Request, interface{}) error) (interface{}, error) {
+func makeGetRequest(fullUrl string, headers map[string]string, requester func(*http.Request, any) error) (any, error) {
 	req, err := http.NewRequest("GET", fullUrl, http.NoBody)
 	if err != nil {
-		return nil, errors.Wrap(err, "Cannot create request")
+		return nil, fmt.Errorf("Cannot create request: %w", err)
 	}
 
 	for key, value := range headers {
@@ -368,7 +368,7 @@ func makeGetRequest(fullUrl string, headers map[string]string, requester func(*h
 		}
 	}
 
-	var temporaryResponse interface{}
+	var temporaryResponse any
 	err = requester(req, &temporaryResponse)
 	if err != nil {
 		return nil, err

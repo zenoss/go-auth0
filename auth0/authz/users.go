@@ -1,7 +1,8 @@
 package authz
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
+
 	"github.com/zenoss/go-auth0/auth0/http"
 )
 
@@ -18,86 +19,82 @@ type User struct {
 }
 
 // GetGroups returns the groups for a user
-func (svc *UsersService) GetGroups(ID string, expand bool) ([]GroupStub, error) {
+func (svc *UsersService) GetGroups(id string, expand bool) ([]GroupStub, error) {
 	var groupResp []GroupStub
-	item := "/" + ID + "/groups"
+	item := "/" + id + "/groups"
 	if expand {
 		item += "?expand"
 	}
 	err := svc.c.Get("/users"+item, &groupResp)
 	if err != nil {
-		return nil, errors.Wrap(err, "go-auth0: cannot get groups for user")
+		return nil, fmt.Errorf("go-auth0: cannot get groups for user: %w", err)
 	}
 	return groupResp, err
 }
 
 // AddGroups puts the user in one or more groups
-func (svc *UsersService) AddGroups(ID string, groups []string) error {
-	err := svc.c.Patch("/users/"+ID+"/groups", &groups, nil)
+func (svc *UsersService) AddGroups(id string, groups []string) error {
+	err := svc.c.Patch("/users/"+id+"/groups", &groups, nil)
 	if err != nil {
-		return errors.Wrap(err, "go-auth0: cannot add groups for user")
+		return fmt.Errorf("go-auth0: cannot add groups for user: %w", err)
 	}
 	return nil
 }
 
 // GetAllGroups returns the groups for a user including nested groups
-func (svc *UsersService) GetAllGroups(ID string) ([]GroupStub, error) {
+func (svc *UsersService) GetAllGroups(id string) ([]GroupStub, error) {
 	var groupResp []GroupStub
-	err := svc.c.Get("/users/"+ID+"/groups/calculate", &groupResp)
+	err := svc.c.Get("/users/"+id+"/groups/calculate", &groupResp)
 	if err != nil {
-		return nil, errors.Wrap(err, "go-auth0: cannot get groups for user")
+		return nil, fmt.Errorf("go-auth0: cannot get all groups for user: %w", err)
 	}
 	return groupResp, err
 }
 
 // GetRoles returns the roles for a user
-func (svc *UsersService) GetRoles(ID string) ([]Role, error) {
+func (svc *UsersService) GetRoles(id string) ([]Role, error) {
 	var roleResp []Role
-	err := svc.c.Get("/users/"+ID+"/roles", &roleResp)
+	err := svc.c.Get("/users/"+id+"/roles", &roleResp)
 	if err != nil {
-		return nil, errors.Wrap(err, "go-auth0: cannot get roles for user")
+		return nil, fmt.Errorf("go-auth0: cannot get roles for user: %w", err)
 	}
 	roles := make([]Role, len(roleResp))
-	for n, r := range roleResp {
-		roles[n] = r
-	}
+	copy(roles, roleResp)
 	return roles, err
 }
 
 // AddRoles gives the user one or more roles
-func (svc *UsersService) AddRoles(ID string, roles []string) error {
-	err := svc.c.Patch("/users/"+ID+"/roles", &roles, nil)
+func (svc *UsersService) AddRoles(id string, roles []string) error {
+	err := svc.c.Patch("/users/"+id+"/roles", &roles, nil)
 	if err != nil {
-		return errors.Wrap(err, "go-auth0: cannot add roles for user")
+		return fmt.Errorf("go-auth0: cannot add roles for user: %w", err)
 	}
 	return nil
 }
 
 // RemoveRoles removes one or more roles from the user
-func (svc *UsersService) RemoveRoles(ID string, roles []string) error {
-	err := svc.c.Delete("/users/"+ID+"/roles", &roles, nil)
+func (svc *UsersService) RemoveRoles(id string, roles []string) error {
+	err := svc.c.Delete("/users/"+id+"/roles", &roles, nil)
 	if err != nil {
-		return errors.Wrap(err, "go-auth0: cannot add roles for user")
+		return fmt.Errorf("go-auth0: cannot remove roles for user: %w", err)
 	}
 	return nil
 }
 
 // GetAllRoles returns all roles for a user, including through group membership
-func (svc *UsersService) GetAllRoles(ID string) ([]Role, error) {
+func (svc *UsersService) GetAllRoles(id string) ([]Role, error) {
 	var roleResp []Role
-	err := svc.c.Get("/users/"+ID+"/roles/calculate", &roleResp)
+	err := svc.c.Get("/users/"+id+"/roles/calculate", &roleResp)
 	if err != nil {
-		return nil, errors.Wrap(err, "go-auth0: cannot get all roles for user")
+		return nil, fmt.Errorf("go-auth0: cannot get all roles for user: %w", err)
 	}
 	roles := make([]Role, len(roleResp))
-	for n, r := range roleResp {
-		roles[n] = r
-	}
+	copy(roles, roleResp)
 	return roles, err
 }
 
 // ExecAuthPolicy executes the authorization policy for a user in the context of a client
-func (svc *UsersService) ExecAuthPolicy(ID, policyID, connection string, groups []string) error {
+func (svc *UsersService) ExecAuthPolicy(id, policyID, connection string, groups []string) error {
 	body := struct {
 		ConnectionName string   `json:"connectionName,omitempty"`
 		Groups         []string `json:"groups,omitempty"`
@@ -105,5 +102,5 @@ func (svc *UsersService) ExecAuthPolicy(ID, policyID, connection string, groups 
 		ConnectionName: connection,
 		Groups:         groups,
 	}
-	return svc.c.Post("/users/"+ID+"/policy/"+policyID, body, nil)
+	return svc.c.Post("/users/"+id+"/policy/"+policyID, body, nil)
 }

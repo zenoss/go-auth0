@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 // These integration tests run against an actual instance of Auth0,

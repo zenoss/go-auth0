@@ -3,13 +3,14 @@ package mgmt_test
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/zenoss/go-auth0/auth0/http"
 	"github.com/zenoss/go-auth0/auth0/mgmt"
 	"github.com/zenoss/go-auth0/mocks"
-	"reflect"
-	"testing"
 )
 
 const testJson = `{
@@ -648,7 +649,7 @@ const testJsonUsers = `
 `
 
 func TestUserSearch(t *testing.T) {
-	var mockDoer = &mocks.Doer{}
+	mockDoer := &mocks.Doer{}
 	mockHTTPRequest := mock.AnythingOfType("*http.Request")
 	svc := mgmt.New(&http.Client{
 		Doer: mockDoer,
@@ -663,7 +664,7 @@ func TestUserSearch(t *testing.T) {
 			err := json.Unmarshal([]byte(testJson), respBody)
 			assert.Nilf(t, err, "failed to unmarshal JSON %q", err)
 		}).Once()
-	//usersPage, err := svc.Users.Search(opts)
+	// usersPage, err := svc.Users.Search(opts)
 	opts := mgmt.SearchUsersOpts{
 		Q:             fmt.Sprintf(`app_metadata.tenant:"%s" AND identities.connection:"%s"`, "lysa2603", "Username-Password-Authentication"),
 		SearchEngine:  "v3",
@@ -693,5 +694,4 @@ func TestUserSearch(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, resp2)
 	assert.NotEmpty(t, resp2.Users)
-
 }
