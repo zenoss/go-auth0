@@ -116,7 +116,9 @@ func (svc *GroupsService) AddMembers(groupID string, members []string) ([]string
 // DeleteMembers deletes one or more members from a group
 func (svc *GroupsService) DeleteMembers(groupID string, members []string) error {
 	err := svc.c.Delete("/groups/"+groupID+"/members", members, nil)
-	return fmt.Errorf("go-auth0: cannot delete members from group: %w", err)
+	if err != nil {
+		return fmt.Errorf("go-auth0: cannot delete members from group: %w", err)
+	}
 }
 
 // GetNestedMembers gets members in nested groups
