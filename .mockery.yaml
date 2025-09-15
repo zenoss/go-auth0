@@ -1,0 +1,11 @@
+dir: "{{.InterfaceDir}}/mocks"
+structname: "{{.InterfaceName}}"
+pkgname: "{{.SrcPackageName}}mocks"
+filename: "mocks.go"
+template: testify
+template-data:
+  unroll-variadic: true
+packages:
+  github.com/zenoss/go-auth0/auth0/http:
+    interfaces:
+      Doer:
