@@ -1,0 +1,3 @@
+/vendor/** -diff linguist-generated
+**/mocks/** -diff linguist-generated
+/go.sum -diff linguist-generated
