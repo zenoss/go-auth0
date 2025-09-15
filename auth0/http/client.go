@@ -258,7 +258,7 @@ func (c *Client) CountV2(endpoint string) (int, error) {
 }
 
 // Post performs a post to the endpoint of the API associated with the client
-func (c *Client) PostWithHeaders(endpoint string, body any, respBody any, headers map[string]string) error {
+func (c *Client) PostWithHeaders(endpoint string, body, respBody any, headers map[string]string) error {
 	data, err := json.Marshal(body)
 	if err != nil {
 		return fmt.Errorf("Cannot marshal body: %w", err)
@@ -279,12 +279,12 @@ func (c *Client) PostWithHeaders(endpoint string, body any, respBody any, header
 }
 
 // Post performs a post to the endpoint of the API associated with the client
-func (c *Client) Post(endpoint string, body any, respBody any) error {
+func (c *Client) Post(endpoint string, body, respBody any) error {
 	return c.PostWithHeaders(endpoint, body, respBody, map[string]string{})
 }
 
 // Put performs a put to the endpoint of the API associated with the client
-func (c *Client) PutWithHeaders(endpoint string, body any, respBody any, headers map[string]string) error {
+func (c *Client) PutWithHeaders(endpoint string, body, respBody any, headers map[string]string) error {
 	data, err := json.Marshal(body)
 	if err != nil {
 		return fmt.Errorf("Cannot marshal body: %w", err)
@@ -305,12 +305,12 @@ func (c *Client) PutWithHeaders(endpoint string, body any, respBody any, headers
 }
 
 // Put performs a put to the endpoint of the API associated with the client
-func (c *Client) Put(endpoint string, body any, respBody any) error {
+func (c *Client) Put(endpoint string, body, respBody any) error {
 	return c.PutWithHeaders(endpoint, body, respBody, map[string]string{})
 }
 
 // Patch performs a patch to the endpoint of the API associated with the client
-func (c *Client) PatchWithHeaders(endpoint string, body any, respBody any, headers map[string]string) error {
+func (c *Client) PatchWithHeaders(endpoint string, body, respBody any, headers map[string]string) error {
 	data, err := json.Marshal(body)
 	if err != nil {
 		return fmt.Errorf("Cannot marshal body: %w", err)
@@ -331,12 +331,12 @@ func (c *Client) PatchWithHeaders(endpoint string, body any, respBody any, heade
 }
 
 // Patch performs a patch to the endpoint of the API associated with the client
-func (c *Client) Patch(endpoint string, body any, respBody any) error {
+func (c *Client) Patch(endpoint string, body, respBody any) error {
 	return c.PatchWithHeaders(endpoint, body, respBody, map[string]string{})
 }
 
 // Delete performs a delete to the endpoint of the API associated with the client
-func (c *Client) DeleteWithHeaders(endpoint string, body any, respBody any, headers map[string]string) error {
+func (c *Client) DeleteWithHeaders(endpoint string, body, respBody any, headers map[string]string) error {
 	data, err := json.Marshal(body)
 	if err != nil {
 		return fmt.Errorf("Cannot marshal body: %w", err)
@@ -357,7 +357,7 @@ func (c *Client) DeleteWithHeaders(endpoint string, body any, respBody any, head
 }
 
 // Delete performs a delete to the endpoint of the API associated with the client
-func (c *Client) Delete(endpoint string, body any, respBody any) error {
+func (c *Client) Delete(endpoint string, body, respBody any) error {
 	return c.DeleteWithHeaders(endpoint, body, respBody, map[string]string{})
 }
 
@@ -371,7 +371,7 @@ func extractKeyFromEndpoint(fullUrl string) string {
 	return strings.ReplaceAll(key, "-", "_")
 }
 
-func convertResponseData(data any, container any) error {
+func convertResponseData(data, container any) error {
 	dataJson, err := json.Marshal(data)
 	if err != nil {
 		return err
