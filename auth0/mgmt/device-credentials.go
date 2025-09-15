@@ -32,18 +32,19 @@ func (svc *DeviceCredentials) Get(userID string) ([]TokenData, error) {
 	v.Add("type", "refresh_token")
 	u := "/device-credentials?" + v.Encode()
 	err := svc.c.GetV2(u, &tokens)
+
 	return tokens, err
 }
 
 // Count refresh tokens
 func (svc *DeviceCredentials) Count(userID string) (int, error) {
 	// https://manage.auth0.com/api/device-credentials?user_id=auth0%7Ce8ey6zc9hfxppbz2h88r5yqqj&type=refresh_token
-
 	v := url.Values{}
 	v.Set("user_id", userID)
 	v.Add("type", "refresh_token")
 	u := "/device-credentials?" + v.Encode()
 	count, err := svc.c.CountV2(u)
+
 	return count, err
 }
 
@@ -56,6 +57,7 @@ func (svc *DeviceCredentials) DeleteByIdentifierInTokens(_, device string, token
 			// bug we reported in https://support.auth0.com/tickets/00496600
 			continue
 		}
+
 		seenTokenId[token.ID] = true
 
 		if token.DeviceName == device {
@@ -67,6 +69,7 @@ func (svc *DeviceCredentials) DeleteByIdentifierInTokens(_, device string, token
 			}
 		}
 	}
+
 	return nil
 }
 
@@ -89,5 +92,6 @@ func (svc *DeviceCredentials) Delete(tokenid string) error {
 func (svc *DeviceCredentials) DeleteGrants(userID string) error {
 	v := url.Values{}
 	v.Set("user_id", userID)
+
 	return svc.c.Delete("/grants?"+v.Encode(), nil, nil)
 }

@@ -21,38 +21,44 @@ func createUser(suite *ManagementTestSuite) mgmt.User {
 		Email:      userEmail,
 		Password:   userPass,
 	})
-	assert.Nil(suite.T(), err)
+	suite.NoError(err)
+
 	return user
 }
 
 func getAllUsers(suite *ManagementTestSuite) []mgmt.User {
 	users, err := suite.management.Users.GetAll()
-	assert.Nil(suite.T(), err)
+	suite.NoError(err)
+
 	return users
 }
 
 func searchUsers(suite *ManagementTestSuite, searchOpts mgmt.SearchUsersOpts) *mgmt.UsersPage {
 	usersPage, err := suite.management.Users.Search(searchOpts)
-	assert.Nil(suite.T(), err)
+	suite.NoError(err)
+
 	return usersPage
 }
 
 func deleteUser(suite *ManagementTestSuite, ID string, ignoreErr bool) {
 	err := suite.management.Users.Delete(ID)
 	if !ignoreErr {
-		assert.Nil(suite.T(), err)
+		suite.NoError(err)
 	}
 }
 
 func cleanUpUsers(suite *ManagementTestSuite) {
 	users := getAllUsers(suite)
+
 	var ID string
+
 	for _, user := range users {
 		if user.Email == userEmail {
 			ID = user.ID
 			break
 		}
 	}
+
 	if ID != "" {
 		deleteUser(suite, ID, true)
 	}
@@ -71,7 +77,7 @@ func (suite *ManagementTestSuite) TestUsersCreateGetAllDelete() {
 
 	// Check we made it successfully
 	user, err := svc.Get(user.ID)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, userEmail, user.Email)
 
 	// Check that we can search
@@ -79,7 +85,7 @@ func (suite *ManagementTestSuite) TestUsersCreateGetAllDelete() {
 		Q: fmt.Sprintf(`email:"%s"`, userEmail),
 	}
 	users, err := svc.Search(searchOpts)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, users)
 
 	// Update it
@@ -87,13 +93,13 @@ func (suite *ManagementTestSuite) TestUsersCreateGetAllDelete() {
 		Blocked: true,
 	}
 	user, err = svc.Update(user.ID, update)
-	assert.Nil(t, err)
-	assert.Equal(t, true, user.Blocked)
+	assert.NoError(t, err)
+	assert.True(t, user.Blocked)
 
 	// Delete it
 	deleteUser(suite, user.ID, false)
 
 	// Check it was deleted
 	_, err = svc.Get(user.ID)
-	assert.NotNil(t, err)
+	assert.Error(t, err)
 }

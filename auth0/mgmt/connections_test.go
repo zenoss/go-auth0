@@ -23,38 +23,44 @@ func createConnection(suite *ManagementTestSuite) mgmt.Connection {
 		},
 	})
 
-	assert.Nil(suite.T(), err)
+	suite.NoError(err)
+
 	return connection
 }
 
 func getAllConnections(suite *ManagementTestSuite) []mgmt.Connection {
 	connections, err := suite.management.Connections.GetAll()
-	assert.Nil(suite.T(), err)
+	suite.NoError(err)
+
 	return connections
 }
 
 func searchConnections(suite *ManagementTestSuite, searchOpts mgmt.SearchConnectionsOpts) *mgmt.ConnectionsPage {
 	connectionsPage, err := suite.management.Connections.Search(searchOpts)
-	assert.Nil(suite.T(), err)
+	suite.NoError(err)
+
 	return connectionsPage
 }
 
 func deleteConnection(suite *ManagementTestSuite, ID string, ignoreErr bool) {
 	err := suite.management.Connections.Delete(ID)
 	if !ignoreErr {
-		assert.Nil(suite.T(), err)
+		suite.NoError(err)
 	}
 }
 
 func cleanUpConnections(suite *ManagementTestSuite) {
 	connections := getAllConnections(suite)
+
 	var ID string
+
 	for _, connection := range connections {
 		if connection.Name == connectionName {
 			ID = connection.ID
 			break
 		}
 	}
+
 	if ID != "" {
 		deleteConnection(suite, ID, true)
 	}
@@ -73,7 +79,7 @@ func (suite *ManagementTestSuite) TestConnectionsCreateGetAllDelete() {
 
 	// Check we made it successfully
 	connection, err := svc.Get(connection.ID)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, connectionName, connection.Name)
 
 	// Check that we can search
@@ -81,7 +87,7 @@ func (suite *ManagementTestSuite) TestConnectionsCreateGetAllDelete() {
 		Name: connectionName,
 	}
 	connections, err := svc.Search(searchOpts)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, connections)
 
 	// Update it
@@ -89,7 +95,7 @@ func (suite *ManagementTestSuite) TestConnectionsCreateGetAllDelete() {
 		DisplayName: "Test Connection Renamed",
 	}
 	connection, err = svc.Update(connection.ID, update)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, "Test Connection Renamed", connection.DisplayName)
 
 	// Delete it
@@ -97,5 +103,5 @@ func (suite *ManagementTestSuite) TestConnectionsCreateGetAllDelete() {
 
 	// Check it was deleted
 	_, err = svc.Get(connection.ID)
-	assert.NotNil(t, err)
+	assert.Error(t, err)
 }

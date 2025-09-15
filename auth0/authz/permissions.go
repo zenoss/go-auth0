@@ -21,24 +21,30 @@ type Permission struct {
 // GetAll returns all permissions
 func (svc *PermissionsService) GetAll() ([]Permission, error) {
 	var permissions []Permission
+
 	err := svc.c.Get("/permissions", &struct {
 		Permissions *[]Permission `json:"permissions,omitempty"`
 	}{Permissions: &permissions})
+
 	return permissions, err
 }
 
 // Get returns a permissions
 func (svc *PermissionsService) Get(id string) (Permission, error) {
 	var perm Permission
+
 	err := svc.c.Get("/permissions/"+id, &perm)
+
 	return perm, err
 }
 
 // Create creates a permission
 func (svc *PermissionsService) Create(perm Permission) (Permission, error) {
 	var permResp Permission
+
 	perm.ID = ""
 	err := svc.c.Post("/permissions", &perm, &permResp)
+
 	return permResp, err
 }
 
@@ -50,8 +56,10 @@ func (svc *PermissionsService) Delete(id string) error {
 // Update creates a permission
 func (svc *PermissionsService) Update(perm Permission) (Permission, error) {
 	var permResp Permission
+
 	permID := perm.ID
 	perm.ID = ""
 	err := svc.c.Put("/permissions/"+permID, &perm, &permResp)
+
 	return permResp, err
 }

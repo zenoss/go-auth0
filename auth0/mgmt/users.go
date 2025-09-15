@@ -101,6 +101,7 @@ func (opts *SearchUsersOpts) Encode() (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return vals.Encode(), nil
 }
 
@@ -115,40 +116,50 @@ type Identity struct {
 // GetAll returns all users
 func (svc *UsersService) GetAll() ([]User, error) {
 	var users []User
+
 	err := svc.c.GetV2("/users", &users)
+
 	return users, err
 }
 
 // Get returns a users
 func (svc *UsersService) Get(userID string) (User, error) {
 	var user User
+
 	err := svc.c.Get("/users/"+userID, &user)
+
 	return user, err
 }
 
 // Search retrieves users according to search criteria
 func (svc *UsersService) Search(opts SearchUsersOpts) (*UsersPage, error) {
 	var usersPage UsersPage
+
 	queryString, err := opts.Encode()
 	if err != nil {
 		return nil, err
 	}
+
 	url := "/users"
 	if queryString != "" {
 		url = "/users?" + queryString
 	}
+
 	if opts.IncludeTotals {
 		err = svc.c.Get(url, &usersPage)
 	} else {
 		err = svc.c.Get(url, &usersPage.Users)
 	}
+
 	return &usersPage, err
 }
 
 // Create creates a user
 func (svc *UsersService) Create(opts UserOpts) (User, error) {
 	var user User
+
 	err := svc.c.Post("/users", opts, &user)
+
 	return user, err
 }
 
@@ -164,6 +175,8 @@ func (svc *UsersService) DeleteWithBody(userID string, body any) error {
 // Update updates a user
 func (svc *UsersService) Update(userID string, opts UserUpdateOpts) (User, error) {
 	var user User
+
 	err := svc.c.Patch("/users/"+userID, &opts, &user)
+
 	return user, err
 }

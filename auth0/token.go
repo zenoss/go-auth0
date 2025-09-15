@@ -49,10 +49,12 @@ func (svc *TokenService) GetToken(body TokenRequestBody) (*TokenResponseBody, er
 	headers := map[string]string{
 		"User-Agent": body.Device,
 	}
+
 	err := svc.PostWithHeaders("/oauth/token", body, &resBody, headers)
 	if err != nil {
 		return nil, fmt.Errorf("Cannot complete token request: %w", err)
 	}
+
 	return &resBody, nil
 }
 
@@ -65,6 +67,7 @@ func (svc *TokenService) GetTokenFromClientCreds(clientID, clientSecret, audienc
 		ClientSecret: clientSecret,
 		Audience:     audience,
 	}
+
 	return svc.GetToken(body)
 }
 
@@ -77,6 +80,7 @@ func (svc *TokenService) GetTokenFromUserPass(username, password, clientID strin
 		Username:  username,
 		Password:  password,
 	}
+
 	return svc.GetToken(body)
 }
 
@@ -90,5 +94,6 @@ func (svc *TokenService) GetRealmTokenFromUserPass(username, password, clientID,
 		Password:  password,
 		Realm:     realm,
 	}
+
 	return svc.GetToken(body)
 }

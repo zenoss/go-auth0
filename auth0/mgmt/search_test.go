@@ -662,7 +662,7 @@ func TestUserSearch(t *testing.T) {
 				t.Errorf("response body should be of type %t", reflect.TypeOf(&mgmt.UsersPage{}))
 			}
 			err := json.Unmarshal([]byte(testJson), respBody)
-			assert.Nilf(t, err, "failed to unmarshal JSON %q", err)
+			assert.NoErrorf(t, err, "failed to unmarshal JSON %q", err)
 		}).Once()
 	// usersPage, err := svc.Users.Search(opts)
 	opts := mgmt.SearchUsersOpts{
@@ -673,11 +673,11 @@ func TestUserSearch(t *testing.T) {
 		PerPage:       26,
 	}
 	resp, err := svc.Users.Search(opts)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, resp)
-	assert.Equal(t, resp.Start, 26)
-	assert.Equal(t, resp.Length, 26)
-	assert.Equal(t, resp.Total, 52)
+	assert.Equal(t, 26, resp.Start)
+	assert.Equal(t, 26, resp.Length)
+	assert.Equal(t, 52, resp.Total)
 	assert.NotEmpty(t, resp.Users)
 	mockDoer.On("Do", mockHTTPRequest, mock.Anything).
 		Return(nil).
@@ -687,11 +687,12 @@ func TestUserSearch(t *testing.T) {
 				t.Errorf("response body should be of type %t", reflect.TypeOf(&[]mgmt.User{}))
 			}
 			err := json.Unmarshal([]byte(testJsonUsers), respBody)
-			assert.Nilf(t, err, "failed to unmarshal JSON %q", err)
+			assert.NoErrorf(t, err, "failed to unmarshal JSON %q", err)
 		}).Once()
+
 	opts.IncludeTotals = false
 	resp2, err := svc.Users.Search(opts)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, resp2)
 	assert.NotEmpty(t, resp2.Users)
 }
