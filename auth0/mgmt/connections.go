@@ -67,46 +67,57 @@ func (opts *SearchConnectionsOpts) Encode() (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return vals.Encode(), nil
 }
 
 // GetAll returns all connections
 func (svc *ConnectionsService) GetAll() ([]Connection, error) {
 	var connections []Connection
+
 	err := svc.c.GetV2("/connections", &connections)
+
 	return connections, err
 }
 
 // Get returns a connection
 func (svc *ConnectionsService) Get(connectionID string) (Connection, error) {
 	var connection Connection
+
 	err := svc.c.Get("/connections/"+connectionID, &connection)
+
 	return connection, err
 }
 
 // Search retrieves connections according to search criteria
 func (svc *ConnectionsService) Search(opts SearchConnectionsOpts) (*ConnectionsPage, error) {
 	var connectionsPage ConnectionsPage
+
 	queryString, err := opts.Encode()
 	if err != nil {
 		return nil, err
 	}
+
 	url := "/connections"
 	if queryString != "" {
 		url = "/connections?" + queryString
 	}
+
 	if opts.IncludeTotals {
 		err = svc.c.Get(url, &connectionsPage)
 	} else {
 		err = svc.c.Get(url, &connectionsPage.Connections)
 	}
+
 	return &connectionsPage, err
 }
 
 // Create creates a connection
 func (svc *ConnectionsService) Create(opts ConnectionOpts) (Connection, error) {
 	var connection Connection
+
 	err := svc.c.Post("/connections", opts, &connection)
+
 	return connection, err
 }
 
@@ -122,6 +133,8 @@ func (svc *ConnectionsService) DeleteWithBody(connectionID string, body any) err
 // Update updates a connection
 func (svc *ConnectionsService) Update(connectionID string, opts ConnectionUpdateOpts) (Connection, error) {
 	var connection Connection
+
 	err := svc.c.Patch("/connections/"+connectionID, &opts, &connection)
+
 	return connection, err
 }

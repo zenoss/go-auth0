@@ -72,6 +72,7 @@ func MgmtClientFromCredentials(domain string, api API) *mgmt.ManagementService {
 		if resp == nil {
 			return false, err
 		}
+
 		if resp.StatusCode == gohttp.StatusTooManyRequests {
 			// Retry only on 429 errors.   We could handle other intermittent problems
 			// if we used the default policy, but I wanted to focus on rate limits
@@ -84,6 +85,7 @@ func MgmtClientFromCredentials(domain string, api API) *mgmt.ManagementService {
 	ctx = context.WithValue(ctx, oauth2.HTTPClient, retryClient.StandardClient())
 
 	cfg := clientCredentialsConfig(ctx, domain, api)
+
 	return mgmt.New(
 		&http.Client{
 			Doer: &http.RootClient{
@@ -108,6 +110,7 @@ func AuthzClientFromCredentials(domain string, api API) *authz.AuthorizationServ
 		if resp == nil {
 			return false, err
 		}
+
 		if resp.StatusCode == gohttp.StatusTooManyRequests {
 			// Retry only on 429 errors.   We could handle other intermittent problems
 			// if we used the default policy, but I wanted to focus on rate limits
@@ -120,6 +123,7 @@ func AuthzClientFromCredentials(domain string, api API) *authz.AuthorizationServ
 	ctx = context.WithValue(ctx, oauth2.HTTPClient, retryClient.StandardClient())
 
 	cfg := clientCredentialsConfig(ctx, domain, api)
+
 	return authz.New(
 		&http.Client{
 			Doer: &http.RootClient{
@@ -136,6 +140,7 @@ type GrantFunc func(url string) (string, error)
 // PromptGrant uses stdin/out to get an authorization grant
 func PromptGrant(url string) (string, error) {
 	fmt.Printf("Visit the URL for the auth dialog, then enter the code: %v\n", url)
+
 	var code string
 	if _, err := fmt.Scan(&code); err != nil {
 		return "", fmt.Errorf("Unable to get code from input: %w", err)
@@ -161,14 +166,17 @@ func ClientFromGrant(domain string, api API, getGrant GrantFunc) (*gohttp.Client
 	ctx := context.Background()
 	cfg := grantConfig(ctx, domain, api)
 	url := cfg.AuthCodeURL("state", oauth2.AccessTypeOffline)
+
 	code, err := getGrant(url)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get authorization grant: %w", err)
 	}
+
 	token, err := cfg.Exchange(ctx, code)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to exchange authorization grant for token: %w", err)
 	}
+
 	return cfg.Client(ctx, token), nil
 }
 
@@ -177,14 +185,17 @@ func MgmtClientFromGrant(domain string, api API, getGrant GrantFunc) (*mgmt.Mana
 	ctx := context.Background()
 	cfg := grantConfig(ctx, domain, api)
 	url := cfg.AuthCodeURL("state", oauth2.AccessTypeOffline)
+
 	code, err := getGrant(url)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get authorization grant: %w", err)
 	}
+
 	token, err := cfg.Exchange(ctx, code)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to exchange authorization grant for token: %w", err)
 	}
+
 	return mgmt.New(
 		&http.Client{
 			Doer: &http.RootClient{
@@ -200,14 +211,17 @@ func AuthzClientFromGrant(domain string, api API, getGrant GrantFunc) (*authz.Au
 	ctx := context.Background()
 	cfg := grantConfig(ctx, domain, api)
 	url := cfg.AuthCodeURL("state", oauth2.AccessTypeOffline)
+
 	code, err := getGrant(url)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get authorization grant: %w", err)
 	}
+
 	token, err := cfg.Exchange(ctx, code)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to exchange authorization grant for token: %w", err)
 	}
+
 	return authz.New(
 		&http.Client{
 			Doer: &http.RootClient{

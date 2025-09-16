@@ -25,38 +25,44 @@ func createRole(suite *AuthzTestSuite) authz.Role {
 		ApplicationType: roleAppType,
 		ApplicationID:   roleAppID,
 	})
-	assert.Nil(suite.T(), err)
+	suite.NoError(err)
+
 	return role
 }
 
 func getAllRoles(suite *AuthzTestSuite) []authz.Role {
 	roles, err := suite.authorization.Roles.GetAll()
-	assert.Nil(suite.T(), err)
+	suite.NoError(err)
+
 	return roles
 }
 
 func updateRole(suite *AuthzTestSuite, role authz.Role) authz.Role {
 	role, err := suite.authorization.Roles.Update(role)
-	assert.Nil(suite.T(), err)
+	suite.NoError(err)
+
 	return role
 }
 
 func deleteRole(suite *AuthzTestSuite, ID string, ignoreErr bool) {
 	err := suite.authorization.Roles.Delete(ID)
 	if !ignoreErr {
-		assert.Nil(suite.T(), err)
+		suite.NoError(err)
 	}
 }
 
 func cleanUpRoles(suite *AuthzTestSuite) {
 	roles := getAllRoles(suite)
+
 	var ID string
+
 	for _, p := range roles {
 		if p.Name == roleName {
 			ID = p.ID
 			break
 		}
 	}
+
 	if ID != "" {
 		deleteRole(suite, ID, true)
 	}
@@ -71,10 +77,10 @@ func (suite *AuthzTestSuite) TestRolesCreateGetAllDelete() {
 	svc := suite.authorization.Roles
 	// Create a role
 	role := createRole(suite)
-	assert.Equal(suite.T(), roleName, role.Name)
+	suite.Equal(roleName, role.Name)
 	// Check we made it successfully
 	role, err := svc.Get(role.ID)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, roleName, role.Name)
 
 	// The auth0 api won't let us update without including application type
@@ -88,10 +94,12 @@ func (suite *AuthzTestSuite) TestRolesCreateGetAllDelete() {
 	// Check it was deleted
 	roles := getAllRoles(suite)
 	found := false
+
 	for _, p := range roles {
 		if role.ID == p.ID {
 			found = true
 		}
 	}
+
 	assert.False(t, found)
 }

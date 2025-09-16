@@ -7,6 +7,7 @@ import (
 // AuthorizationService is a gateway to Auth0 Authorization Extension services
 type AuthorizationService struct {
 	*http.Client
+
 	Groups      *GroupsService
 	Permissions *PermissionsService
 	Roles       *RolesService
@@ -31,5 +32,6 @@ func New(client *http.Client) *AuthorizationService {
 	authz.Users = &UsersService{
 		c: authz.Client,
 	}
+
 	return authz
 }

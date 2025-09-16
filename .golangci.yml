@@ -1,0 +1,282 @@
+version: "2"
+run:
+  go: "1.25"
+  build-tags:
+    - integration
+  issues-exit-code: 0 # let SonarQube determine this based on issue severity
+  tests: true
+output:
+  formats:
+    tab:
+      path: stdout
+    html:
+      path: golangci-lint.html
+    checkstyle:
+      path: golangci-lint.xml
+    sarif:
+      path: golangci-lint.sarif
+  sort-order:
+    - file
+linters:
+  default: all
+  disable:
+    - contextcheck
+    - cyclop # handled by revive
+    - err113
+    - exhaustive
+    - exhaustruct
+    - forbidigo
+    - forcetypeassert # debateable
+    - funlen
+    - gochecknoglobals
+    - gochecknoinits
+    - gocognit # handled by revive
+    - godot
+    - ireturn
+    - lll
+    - mnd
+    - musttag
+    - nlreturn
+    - nonamedreturns
+    - paralleltest
+    - protogetter
+    - varnamelen # debateable - keeping configuration below just in case
+    - wrapcheck # debateable - keeping configuration below just in case
+    - wsl
+  settings:
+    tagliatelle:
+      case:
+        rules:
+          json: snake
+          yaml: snake
+          xml: snake
+          toml: snake
+          bson: snake
+          avro: snake
+          mapstructure: snake
+          env: upperSnake
+          envconfig: upperSnake
+          whatever: snake
+    depguard:
+      rules:
+        main:
+          deny:
+            - pkg: math/rand$
+              desc: use math/rand/v2
+            - pkg: github.com/pkg/errors
+              desc: use errors
+            - pkg: io/ioutil
+              desc: use io
+            - pkg: github.com/golang/protobuf
+            - pkg: github.com/golang/protobuf.+
+            - pkg: go.opencensus.io/trace
+    revive:
+      severity: warning
+      enable-all-rules: true
+      rules:
+        # Rules promoted to error severity, or otherwise adjusted.
+        - name: function-result-limit
+          arguments:
+            - 3
+          severity: error
+        - name: argument-limit
+          arguments:
+            - 5
+          severity: error
+        - name: cognitive-complexity
+          arguments:
+            - 30
+          severity: error
+        - name: cyclomatic
+          arguments:
+            - 25
+          severity: error
+        - name: use-any
+          severity: error
+        - name: unhandled-error
+          arguments:
+            - fmt.Printf
+            - fmt.Print
+            - fmt.Printl
+          severity: error
+        - name: empty-lines
+          severity: error
+        - name: defer
+          severity: error
+        - name: optimize-operands-order
+          severity: error
+        - name: indent-error-flow
+          severity: error
+        - name: error-return
+          severity: error
+        - name: error-strings
+          severity: error
+        - name: error-naming
+          severity: error
+        - name: context-as-argument
+          arguments:
+            - allowTypesBefore: "*testing.T"
+          severity: error
+        - name: context-keys-type
+          severity: error
+        - name: early-return
+          severity: error
+        - name: atomic
+          severity: error
+        - name: blank-imports
+          severity: error
+        - name: bool-literal-in-expr
+          severity: error
+        - name: call-to-gc
+          severity: error
+        - name: deep-exit
+          severity: error
+        - name: confusing-results
+          severity: error
+        - name: constant-logical-expr
+          severity: error
+        - name: duplicated-imports
+          severity: error
+        - name: empty-block
+          severity: error
+        - name: errorf
+          severity: error
+        - name: get-return
+          severity: error
+        - name: identical-branches
+          severity: error
+        - name: modifies-parameter
+          severity: error
+        - name: modifies-value-receiver
+          severity: error
+        - name: range
+          severity: error
+        - name: range-val-in-closure
+          severity: error
+        - name: range-val-address
+          severity: error
+        - name: receiver-naming
+          severity: error
+        - name: redefines-builtin-id
+          severity: error
+        - name: string-of-int
+          severity: error
+        - name: struct-tag
+          severity: error
+        - name: superfluous-else
+          severity: error
+        - name: time-equal
+          severity: error
+        - name: time-naming
+          severity: error
+        - name: unconditional-recursion
+          severity: error
+        - name: unexported-naming
+          severity: error
+        - name: unexported-return
+          severity: error
+        - name: unnecessary-stmt
+          severity: error
+        - name: unreachable-code
+          severity: error
+        - name: unused-parameter
+          severity: error
+        - name: useless-break
+          severity: error
+        - name: waitgroup-by-value
+          severity: error
+        - name: datarace
+          severity: error
+        - name: unused-receiver
+          severity: error
+          # Disabled rules.
+        - name: comment-spacings
+          disabled: true
+        - name: line-length-limit
+          disabled: true
+        - name: confusing-naming
+          disabled: true
+        - name: exported
+          disabled: true
+        - name: package-comments
+          disabled: true
+        - name: add-constant
+          disabled: true
+        - name: file-header
+          disabled: true
+        - name: banned-characters
+          disabled: true
+        - name: max-public-structs
+          disabled: true
+        - name: import-shadowing
+          disabled: true
+        - name: function-length
+          disabled: true
+        - name: nested-structs
+          disabled: true
+        - name: if-return
+          disabled: true
+        - name: bare-return
+          disabled: true
+        - name: dot-imports
+          disabled: true
+        - name: increment-decrement
+          disabled: true
+        - name: string-format
+          disabled: true
+        - name: flag-parameter
+          disabled: true
+        - name: var-declaration
+          disabled: true
+        - name: var-naming
+          disabled: true
+    varnamelen:
+      ignore-names:
+        - eg # errgroup.Group
+        - err
+        - ok # conventionally used as the "found" result from a map lookup
+        - v # conventionally used as the value for a type switch
+        - wg # sync.WaitGroup
+    wrapcheck:
+      extra-ignore-sigs:
+        - status.Error(
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      # This raises a false positive on many of our ginkgo tests because we
+      # reinitialize the context's ctx in BeforeEach.
+      - linters:
+          - fatcontext
+        path: _test\.go
+        text: nested context in function literal
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  fix: true
+severity:
+  default: "@linter"
+  rules:
+    - linters:
+        - godox
+        - staticcheck
+      severity: info
+formatters:
+  enable:
+    - gofmt
+    - gofumpt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

@@ -26,6 +26,7 @@ import (
 
 type AuthzTestSuite struct {
 	suite.Suite
+
 	authorization *authz.AuthorizationService
 }
 
@@ -34,6 +35,7 @@ func getFromEnv(envVar string) string {
 	if val == "" {
 		panic("environment variable '" + envVar + "' must be set")
 	}
+
 	return val
 }
 

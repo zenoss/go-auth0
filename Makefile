@@ -31,31 +31,13 @@ endif
 .PHONY: lint
 lint: revive golangci-lint
 
-.PHONY: revive
-revive:
-ifeq ($(strip $(REVIVE)),)
-	@echo "$(RED) Warning: revive is not available on this system, please install it"
-else
-	@echo "$(M) revive: linting…"
-	@$(REVIVE) \
-		-config ./.revive.toml \
-		-formatter=stylish \
-		-exclude ./vendor/... \
-		./...
-endif
-
-.PHONY: golangci-lint
-golangci-lint:
+.PHONY: lint
+lint:
 ifeq ($(strip $(GOLANGCI_LINT)),)
 	@echo "$(RED) Warning: golangci-lint is not available on this system, please install it"
 else
 	@echo "$(M) golangci-lint: linting…"
-	-@$(GOLANGCI_LINT) run \
-		--tests=false \
-		--sort-results \
-		--presets "unused,performance,bugs" \
-		--disable "protogetter,contextcheck,musttag" \
-		./...
+	@$(GOLANGCI_LINT) run --config .golangci.yml ./...
 endif
 
 .PHONY: test

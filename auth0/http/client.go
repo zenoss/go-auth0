@@ -23,6 +23,7 @@ type Doer interface {
 // Client handles requests to API
 type Client struct {
 	Doer
+
 	API string
 }
 
@@ -36,10 +37,12 @@ func readAndUnmarshal(r io.Reader, obj any) error {
 	if err != nil {
 		return fmt.Errorf("Cannot read response body: %w", err)
 	}
+
 	err = json.Unmarshal(data, obj)
 	if err != nil {
 		return fmt.Errorf("Cannot unmarshal response: %w", err)
 	}
+
 	return nil
 }
 
@@ -50,22 +53,26 @@ func getResponseError(resp *http.Response) error {
 			HTTPError:  resp.Status,
 		}
 	}
+
 	var respError Error
+
 	defer func() {
 		_ = resp.Body.Close()
 	}()
+
 	err := readAndUnmarshal(resp.Body, &respError)
 	if err != nil {
 		return err
 	}
+
 	return respError
 }
 
 // Do processes a request and unmarshals the response body into respBody
 func (c *RootClient) Do(req *http.Request, respBody any) error {
 	// POSTs are application/json to this api
-	if req.ContentLength > 0 && (req.Method == "POST" ||
-		req.Method == "PUT" || req.Method == "PATCH") {
+	if req.ContentLength > 0 && (req.Method == http.MethodPost ||
+		req.Method == http.MethodPut || req.Method == http.MethodPatch) {
 		req.Header.Add("Content-Type", "application/json")
 	}
 	// Perform the request
@@ -83,8 +90,10 @@ func (c *RootClient) Do(req *http.Request, respBody any) error {
 		defer func() {
 			_ = resp.Body.Close()
 		}()
+
 		return readAndUnmarshal(resp.Body, respBody)
 	}
+
 	return getResponseError(resp)
 }
 
@@ -99,15 +108,17 @@ func noSlash(uri string) string {
 
 // Get performs a get to the endpoint of the API associated with the client
 func (c *Client) GetWithHeaders(endpoint string, respBody any, headers map[string]string) error {
-	req, err := http.NewRequest("GET", noSlash(c.API)+endpoint, http.NoBody)
+	req, err := http.NewRequest(http.MethodGet, noSlash(c.API)+endpoint, http.NoBody)
 	if err != nil {
 		return fmt.Errorf("Cannot create request: %w", err)
 	}
+
 	for key, value := range headers {
 		if len(strings.TrimSpace(key)) > 0 && len(strings.TrimSpace(value)) > 0 {
 			req.Header.Add(key, value)
 		}
 	}
+
 	return c.Doer.Do(req, respBody)
 }
 
@@ -127,6 +138,7 @@ func (c *Client) GetWithHeadersV2(endpoint string, respBody any, headers map[str
 		if err != nil {
 			return err
 		}
+
 		return convertResponseData(response, respBody)
 	}
 
@@ -144,6 +156,7 @@ func (c *Client) GetWithHeadersV2(endpoint string, respBody any, headers map[str
 	var results []any
 
 	var total int
+
 	if val, ok := response.(map[string]any); ok {
 		if t, ok := val["total"]; ok {
 			total = int(t.(float64))
@@ -164,29 +177,38 @@ func (c *Client) GetWithHeadersV2(endpoint string, respBody any, headers map[str
 
 	// spawn a bounded number of goroutines
 	urls := make(chan string, chanLen)
+
 	for i := maxPage; i < total; i += maxPage {
 		page += 1
 		// queue up the requests
 		urls <- addPagingParams(fullUrl, page, maxPage)
 	}
+
 	close(urls)
+
 	limiter := rate.NewLimiter(2, 2)
+
 	for range 2 {
 		g.Go(func() error {
 			for fullUrl := range urls {
 				_ = limiter.Wait(context.TODO())
+
 				response, err := makeGetRequest(fullUrl, headers, c.Doer.Do)
 				if err != nil {
 					return err
 				}
+
 				data <- response
 			}
+
 			return nil
 		})
 	}
+
 	if err := g.Wait(); err != nil {
 		return err
 	}
+
 	close(data)
 
 	for d := range data {
@@ -217,12 +239,15 @@ func (c *Client) CountWithHeadersV2(endpoint string, headers map[string]string) 
 	if err != nil {
 		return 0, err
 	}
+
 	if val, ok := response.(map[string]any); ok {
 		if t, ok := val["total"]; ok {
 			return int(t.(float64)), nil
 		}
+
 		return 0, fmt.Errorf("No total record count returned by GET %s query", fullUrl)
 	}
+
 	return 0, fmt.Errorf("Unable to process response to GET %s query", fullUrl)
 }
 
@@ -233,94 +258,106 @@ func (c *Client) CountV2(endpoint string) (int, error) {
 }
 
 // Post performs a post to the endpoint of the API associated with the client
-func (c *Client) PostWithHeaders(endpoint string, body any, respBody any, headers map[string]string) error {
+func (c *Client) PostWithHeaders(endpoint string, body, respBody any, headers map[string]string) error {
 	data, err := json.Marshal(body)
 	if err != nil {
 		return fmt.Errorf("Cannot marshal body: %w", err)
 	}
-	req, err := http.NewRequest("POST", noSlash(c.API)+endpoint, bytes.NewBuffer(data))
+
+	req, err := http.NewRequest(http.MethodPost, noSlash(c.API)+endpoint, bytes.NewBuffer(data))
 	if err != nil {
 		return fmt.Errorf("Cannot create request: %w", err)
 	}
+
 	for key, value := range headers {
 		if len(strings.TrimSpace(key)) > 0 && len(strings.TrimSpace(value)) > 0 {
 			req.Header.Add(key, value)
 		}
 	}
+
 	return c.Doer.Do(req, respBody)
 }
 
 // Post performs a post to the endpoint of the API associated with the client
-func (c *Client) Post(endpoint string, body any, respBody any) error {
+func (c *Client) Post(endpoint string, body, respBody any) error {
 	return c.PostWithHeaders(endpoint, body, respBody, map[string]string{})
 }
 
 // Put performs a put to the endpoint of the API associated with the client
-func (c *Client) PutWithHeaders(endpoint string, body any, respBody any, headers map[string]string) error {
+func (c *Client) PutWithHeaders(endpoint string, body, respBody any, headers map[string]string) error {
 	data, err := json.Marshal(body)
 	if err != nil {
 		return fmt.Errorf("Cannot marshal body: %w", err)
 	}
-	req, err := http.NewRequest("PUT", noSlash(c.API)+endpoint, bytes.NewBuffer(data))
+
+	req, err := http.NewRequest(http.MethodPut, noSlash(c.API)+endpoint, bytes.NewBuffer(data))
 	if err != nil {
 		return fmt.Errorf("Cannot create request: %w", err)
 	}
+
 	for key, value := range headers {
 		if len(strings.TrimSpace(key)) > 0 && len(strings.TrimSpace(value)) > 0 {
 			req.Header.Add(key, value)
 		}
 	}
+
 	return c.Doer.Do(req, respBody)
 }
 
 // Put performs a put to the endpoint of the API associated with the client
-func (c *Client) Put(endpoint string, body any, respBody any) error {
+func (c *Client) Put(endpoint string, body, respBody any) error {
 	return c.PutWithHeaders(endpoint, body, respBody, map[string]string{})
 }
 
 // Patch performs a patch to the endpoint of the API associated with the client
-func (c *Client) PatchWithHeaders(endpoint string, body any, respBody any, headers map[string]string) error {
+func (c *Client) PatchWithHeaders(endpoint string, body, respBody any, headers map[string]string) error {
 	data, err := json.Marshal(body)
 	if err != nil {
 		return fmt.Errorf("Cannot marshal body: %w", err)
 	}
-	req, err := http.NewRequest("PATCH", noSlash(c.API)+endpoint, bytes.NewBuffer(data))
+
+	req, err := http.NewRequest(http.MethodPatch, noSlash(c.API)+endpoint, bytes.NewBuffer(data))
 	if err != nil {
 		return fmt.Errorf("Cannot create request: %w", err)
 	}
+
 	for key, value := range headers {
 		if len(strings.TrimSpace(key)) > 0 && len(strings.TrimSpace(value)) > 0 {
 			req.Header.Add(key, value)
 		}
 	}
+
 	return c.Doer.Do(req, respBody)
 }
 
 // Patch performs a patch to the endpoint of the API associated with the client
-func (c *Client) Patch(endpoint string, body any, respBody any) error {
+func (c *Client) Patch(endpoint string, body, respBody any) error {
 	return c.PatchWithHeaders(endpoint, body, respBody, map[string]string{})
 }
 
 // Delete performs a delete to the endpoint of the API associated with the client
-func (c *Client) DeleteWithHeaders(endpoint string, body any, respBody any, headers map[string]string) error {
+func (c *Client) DeleteWithHeaders(endpoint string, body, respBody any, headers map[string]string) error {
 	data, err := json.Marshal(body)
 	if err != nil {
 		return fmt.Errorf("Cannot marshal body: %w", err)
 	}
-	req, err := http.NewRequest("DELETE", noSlash(c.API)+endpoint, bytes.NewBuffer(data))
+
+	req, err := http.NewRequest(http.MethodDelete, noSlash(c.API)+endpoint, bytes.NewBuffer(data))
 	if err != nil {
 		return fmt.Errorf("Cannot create request: %w", err)
 	}
+
 	for key, value := range headers {
 		if len(strings.TrimSpace(key)) > 0 && len(strings.TrimSpace(value)) > 0 {
 			req.Header.Add(key, value)
 		}
 	}
+
 	return c.Doer.Do(req, respBody)
 }
 
 // Delete performs a delete to the endpoint of the API associated with the client
-func (c *Client) Delete(endpoint string, body any, respBody any) error {
+func (c *Client) Delete(endpoint string, body, respBody any) error {
 	return c.DeleteWithHeaders(endpoint, body, respBody, map[string]string{})
 }
 
@@ -330,18 +367,21 @@ func extractKeyFromEndpoint(fullUrl string) string {
 	path := u.Path
 	li := strings.LastIndex(path, "/")
 	key := path[li+1:]
+
 	return strings.ReplaceAll(key, "-", "_")
 }
 
-func convertResponseData(data any, container any) error {
+func convertResponseData(data, container any) error {
 	dataJson, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
+
 	err = json.Unmarshal(dataJson, &container)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -357,7 +397,7 @@ func addPagingParams(fullUrl string, page, perPage int) string {
 }
 
 func makeGetRequest(fullUrl string, headers map[string]string, requester func(*http.Request, any) error) (any, error) {
-	req, err := http.NewRequest("GET", fullUrl, http.NoBody)
+	req, err := http.NewRequest(http.MethodGet, fullUrl, http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("Cannot create request: %w", err)
 	}
@@ -369,9 +409,11 @@ func makeGetRequest(fullUrl string, headers map[string]string, requester func(*h
 	}
 
 	var temporaryResponse any
+
 	err = requester(req, &temporaryResponse)
 	if err != nil {
 		return nil, err
 	}
+
 	return temporaryResponse, nil
 }

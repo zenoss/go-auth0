@@ -15,6 +15,7 @@ import (
 
 type Auth0TestSuite struct {
 	suite.Suite
+
 	Domain           string
 	API              auth0.API
 	ManagementAPI    auth0.API
@@ -26,6 +27,7 @@ func getFromEnv(envVar string) string {
 	if val == "" {
 		panic("environment variable '" + envVar + "' must be set")
 	}
+
 	return val
 }
 
@@ -63,10 +65,12 @@ func (suite *Auth0TestSuite) TestClientFromCredentials() {
 	//   but this could be yours or anyone elses api
 	ref := getFromEnv("AUTH0_MANAGEMENT_API_URL") + "clients"
 	resp, err := c.Get(ref)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
+
 	defer resp.Body.Close()
+
 	clients, err := ioutil.ReadAll(resp.Body)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	t.Logf("clients:\n%s\n", clients)
 }
 
@@ -75,7 +79,7 @@ func (suite *Auth0TestSuite) TestMgmtClientFromCredentials() {
 	// Create a go http client ready to make calls to the auth0 mgmt api
 	c := auth0.MgmtClientFromCredentials(suite.Domain, suite.ManagementAPI)
 	users, err := c.Users.GetAll()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	t.Logf("users:\n%v\n", users)
 }
 
@@ -84,7 +88,7 @@ func (suite *Auth0TestSuite) TestAuthzClientFromCredentials() {
 	// Create a go http client ready to make calls to the auth0 authz api
 	c := auth0.AuthzClientFromCredentials(suite.Domain, suite.AuthorizationAPI)
 	groups, err := c.Groups.GetAll()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	t.Logf("groups:\n%v\n", groups)
 }
 
@@ -97,6 +101,6 @@ func (suite *Auth0TestSuite) TestTokenClient() {
 		getFromEnv("AUTH0_MANAGEMENT_CLIENT_SECRET"),
 		getFromEnv("AUTH0_MANAGEMENT_API_AUDIENCE"),
 	)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	t.Logf("token:\n%v\n", token)
 }
