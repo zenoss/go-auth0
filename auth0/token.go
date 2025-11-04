@@ -25,19 +25,21 @@ type TokenResponseBody struct {
 // TokenRequestBody contains fields that may be used as data in a POST
 // to /oauth/token to request a token
 type TokenRequestBody struct {
-	GrantType    string `json:"grant_type,omitempty"`
-	ClientID     string `json:"client_id,omitempty"`
-	ClientSecret string `json:"client_secret,omitempty"`
-	Audience     string `json:"audience,omitempty"`
-	Username     string `json:"username,omitempty"`
-	Password     string `json:"password,omitempty"`
-	Scope        string `json:"scope,omitempty"`
-	Code         string `json:"code,omitempty"`
-	CodeVerifier string `json:"code_verifier,omitempty"`
-	RedirectURI  string `json:"redirect_uri,omitempty"`
-	Realm        string `json:"realm,omitempty"`
-	RefreshToken string `json:"refresh_token,omitempty"`
-	Device       string `json:"device,omitempty"`
+	GrantType        string `json:"grant_type,omitempty"`
+	ClientID         string `json:"client_id,omitempty"`
+	ClientSecret     string `json:"client_secret,omitempty"`
+	Audience         string `json:"audience,omitempty"`
+	Username         string `json:"username,omitempty"`
+	Password         string `json:"password,omitempty"`
+	Scope            string `json:"scope,omitempty"`
+	Code             string `json:"code,omitempty"`
+	CodeVerifier     string `json:"code_verifier,omitempty"`
+	RedirectURI      string `json:"redirect_uri,omitempty"`
+	Realm            string `json:"realm,omitempty"`
+	RefreshToken     string `json:"refresh_token,omitempty"`
+	Device           string `json:"device,omitempty"`
+	SubjectTokenType string `json:"subject_token_type,omitempty"`
+	SubjectToken     string `json:"subject_token,omitempty"`
 }
 
 // GetToken performs a generic call to /oauth/token using the body defined
